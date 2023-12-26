@@ -1,0 +1,10 @@
+{
+	"CadastreApiGetSignCodeUrl": "https://ldgis.tainan.gov.tw/portal/WebAPI/service/GetSignCode/",
+	"CadastreApiGetDataUrl": "https://ldgis.tainan.gov.tw/portalAPI/WS/A20230717-0001/00005-5d956f39-7189-4de6-be3d-317132a64d7f/",
+	"CadastreApID": "A20230717-0001",
+	"CadastreApPSWD": "1234@1qaz#EDC",
+	"TainanApiUrl": "https://wrbweb.tainan.gov.tw/TainanApi/",
+	"CWBDayRainfallUrl": "https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0040-003.kmz",
+	"CWBRadUrl": "https://qpeplus.cwa.gov.tw/static/data/grid_0.01deg/cref/",
+	"CWBQpf1h": "https://qpeplus.cwa.gov.tw/static/data/grid/qpfqpe_060min/"
+}

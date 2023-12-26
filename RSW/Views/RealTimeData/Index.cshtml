@@ -1,0 +1,49 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = null;
+}
+@model List<RSW.Models.Data.RealTimeStt4>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>顯示資料</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>原始資料</th>
+                <th>資料時間</th>
+                <th>接收時間</th>
+                <th>延遲</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var RealTimeStt4 in Model)
+            {
+                <tr>
+                    <td>@RealTimeStt4.desc</td>
+                    <td>@RealTimeStt4.datatime</td>
+                    <td>@RealTimeStt4.inserttime</td>
+                    <td>@RealTimeStt4.delaySec</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</body>
+</html>
+
+

@@ -1,0 +1,24 @@
+﻿@model RSW.Models.Manager.User
+@{
+    ViewBag.Title = "SsoMessage";
+}
+<div style="display:flex; justify-content:center; align-items:center; flex-direction:column;height:100%">
+    <h3>@Model.Name 您好</h3>
+    <h2 style="text-align: center;">
+        <b style="color:red">@ViewBag.ErrorMessage</b>
+        @if (ViewBag.ErrorMessage.IndexOf("尚未授權") >= 0)
+        {
+            <br><span>您的登入申請已經送審中<br>請通知系統相關相關人員<br>系統管理員會將您帳號進行開通作業<br>謝謝您</span>
+        }
+        else
+        {
+            <br><span>請通知系統管理員，謝謝您</span>
+        }
+        <label></label>
+    </h2>
+    <h3><a href="@Url.Action("SsoMessagePageRelogin", "User")">請稍後再登入</a></h3>
+
+    <h3>系統管理員:雨水下水道工程科 林哲琦 06-2986672 #7658</h3>
+</div>
+
+

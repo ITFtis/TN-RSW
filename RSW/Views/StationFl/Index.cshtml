@@ -1,0 +1,50 @@
+﻿<script src="~/Scripts/prj/BasicStt_FL.js"></script>
+@using Dou.Misc.Extension
+@*@Html.MenuMap()*@
+@Html.DataManagerOptionsJavascript(null, "douoptions")
+
+<table id="_table"></table>
+<div class="modal fade" id="ITPopUp" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @using (Html.BeginForm("ITAttributes", null, FormMethod.Post, new { @id = "adj" }))
+            {
+                <div class="modal-body">
+                    <h3>遠端控制</h3>
+                    <div class="form-group">
+                        <label for="dev_id">設備代號</label>
+                        <input id="dev_id" type="text" class="form-control" readonly disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="base_elev">水位高程值</label>
+                        <input id="base_elev" type="text" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="alarm1">一級警戒水位</label>
+                        <input id="alarm1" type="text" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="alarm2">二級警戒水位</label>
+                        <input id="alarm2" type="text" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="alarm3">三級警戒水位</label>
+                        <input id="alarm3" type="text" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="rRate">回傳頻率(分鐘)</label>
+                        <input id="rRate" type="text" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="editInfo()">確定</button>
+                    <button type="button" class="btn btn-default" onclick="closeDialog()">取消</button>
+                    <button id="reset1" type="button" class="btn btn-secondary" onclick="resetedit(1)">初始設定</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
