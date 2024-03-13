@@ -66,6 +66,7 @@ namespace RSW.Controllers.Prj
                         result = result.OrderByDescending(s => s.sttDatetime);
                 }
             }
+            TNModelContext.ResetGetRealTimeSttDev();
             TNModelContext.ResetGetRealTimeStt5();
             return result.AsQueryable();
         }

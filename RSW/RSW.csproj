@@ -202,6 +202,7 @@
     </Compile>
     <Compile Include="Models\Data\BasicDevStt.cs" />
     <Compile Include="Models\Data\BasicStt.cs" />
+    <Compile Include="Models\Data\CWA_AirPressure.cs" />
     <Compile Include="Models\Data\BasicSttCounty.cs" />
     <Compile Include="Models\Data\BasicSttDev.cs" />
     <Compile Include="Models\Data\InspectionData.cs" />

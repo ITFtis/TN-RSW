@@ -8,6 +8,12 @@ using System.Reflection;
 using System.Collections.Generic;
 using RSW.Models.Data;
 using RSW.Models.Manager;
+using Newtonsoft.Json;
+using System.Net.Security;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Web.Http.Results;
 
 namespace RSW.Models
 {
@@ -51,6 +57,7 @@ namespace RSW.Models
         public virtual DbSet<RealTimeStt5> RealTimeStt5 { get; set; }
         public virtual DbSet<InspectionData> InspectionData { get; set; }
         public virtual DbSet<TroubleShootingData> TroubleShootingData { get; set; }
+        public virtual DbSet<CWA_AirPressure> CWA_AirPressure { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -187,7 +194,24 @@ namespace RSW.Models
         /// <returns></returns>
         public static IEnumerable<RealTimeStt5> GetRealTimeStt5()
         {
-            int cachetimer = 5 * 60 * 1000;
+            // 獲取現在的時間
+            DateTime currentTime = DateTime.Now;
+            // 只取現在的小時
+            int currentHour = currentTime.Hour;
+            // 格式化時間字串
+            string strTime = $"{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2} {currentHour:D2}:00:00";
+            // 將格式化後的時間字串轉換為 DateTime 類型
+            DateTime DT = DateTime.ParseExact(strTime, "yyyy-MM-dd HH:mm:ss", null);
+            //20240125, add by markhong 不再用最近一筆資料取baro，直接用api取baro
+            //20240311, edit by markhong 根據現在的時刻從[CWA_AirPressure]取相對應的AP，若沒有資料，則用CWA API取AP最新值
+            double AirPressure = 0;
+            using (var db = new TNModelContext())
+            {
+                var lsAP = db.CWA_AirPressure.Where(x => x.datatime == DT).ToList();
+                AirPressure = lsAP == null || lsAP.Count == 0 ? getCwaAPI.GetAirPressure() : lsAP[0].CWA_AP;
+            }
+
+            int cachetimer = 1 * 60 * 1000;
             string key = "RSW.Models.Data.RealTimeStt5";
             var Dev = DouHelper.Misc.GetCache<IEnumerable<RealTimeStt5>>(cachetimer, key);
             lock (lockGetRealTimeStt)
@@ -221,8 +245,10 @@ namespace RSW.Models
                                         //wdepth = d.culvert_depth,
                                         wdepth = d.base_elev, //20231030, edit by markhong 修改來源
                                         rssi = c.rssi,
-                                        level = c.val61 == null ? reCalVal02(c.dev_id, c.val02) : c.val61,
-                                        alarm2= d.alarm2, //20230911, edit by markhong 改回從BasicSttDev抓值
+                                        //壓力式水位要特別計算
+                                        //level = c.val61 == null ? reCalVal02(c.dev_id, c.val02) : c.val61,
+                                        level = c.val61 == null ? reCalVal02(c.dev_id, c.val02, AirPressure) : c.val61,
+                                        alarm2 = d.alarm2, //20230911, edit by markhong 改回從BasicSttDev抓值
                                         alarm3 = d.alarm3, //20230911, edit by markhong 改回從BasicSttDev抓值
                                     }).ToArray();
                         DouHelper.Misc.AddCache(Dev, key);
@@ -243,7 +269,8 @@ namespace RSW.Models
         /// <param name="_devid">設備代號</param>
         /// <param name="_val">水位</param>
         /// <returns></returns>
-        private static double? reCalVal02(string _devid, double? _val)
+        //private static double? reCalVal02(string _devid, double? _val)
+        private static double? reCalVal02(string _devid, double? _val, double AirPressure)
         {
             double? _baro = 0;
             using (var db = new TNModelContext())
@@ -262,18 +289,21 @@ namespace RSW.Models
                                      select c).FirstOrDefault();
                     var vrefdevid = vBasicStt.ref_dev_id.ToString();
                     //最後用refdevid去[RealTimeStt]找出[baro]，寫入時間排序取最近一筆資料
-                    if (vrefdevid != "")
-                    {
-                        var vRealTimeStt = (from c in db.RealTimeStt
-                                            where c.dev_id == vrefdevid
-                                            orderby c.inserttime descending
-                                            select c).FirstOrDefault();
-                        _baro = vRealTimeStt != null ? vRealTimeStt.baro == null ? 0 : vRealTimeStt.baro : _baro;
-                    }
+                    //if (vrefdevid != "")
+                    //{
+                    //    var vRealTimeStt = (from c in db.RealTimeStt
+                    //                        where c.dev_id == vrefdevid
+                    //                        orderby c.inserttime descending
+                    //                        select c).FirstOrDefault();
+                    //    _baro = vRealTimeStt != null ? vRealTimeStt.baro == null ? 0 : vRealTimeStt.baro : _baro;
+                    //}
+                    _baro = vrefdevid == "SW000001" ? 0 : AirPressure / 1000;
                 }
             }
+            //double? newval02 = _val - (_baro * 10);
+            //return newval02;
             double? newval02 = _val - (_baro * 10);
-            return newval02;
+            return newval02 != null ? Math.Round((double)newval02, 3, MidpointRounding.AwayFromZero) : newval02;
         }
         /// <summary>
         /// 取得行政區
@@ -412,5 +442,86 @@ namespace RSW.Models
             string key = "RSW.Models.Data.RemoteCtrlAttribute";
             DouHelper.Misc.ClearCache(key);
         }
+    }
+
+    public class getCwaAPI
+    {
+        public static float GetAirPressure()
+        {
+            float AirPressure = 0;
+            try
+            {
+
+                string rssContent = string.Empty;
+
+                ServicePointManager.ServerCertificateValidationCallback += ValidateRemoteCertificate;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+                using (WebClient wc = new WebClient())
+                {
+                    wc.Encoding = Encoding.GetEncoding("utf-8");
+                    var strUrl = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWB-AFA00ADB-4619-454B-A808-8CAF4A7D0027&format=JSON&StationId=C0N020&WeatherElement=AirPressure&GeoInfo=TownCode";
+                    rssContent = wc.DownloadString(strUrl);
+                }
+                Rootobject ro = JsonConvert.DeserializeObject<Rootobject>(rssContent);
+                AirPressure = ro.records.Station[0].WeatherElement.AirPressure;
+                return string.IsNullOrEmpty(AirPressure.ToString()) || AirPressure.ToString() == "-99" ? 1026 : AirPressure;
+            }
+            catch (Exception ex)
+            {
+                var log = ex.ToString();
+            }
+            return AirPressure;
+        }
+
+        private static bool ValidateRemoteCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors error)
+        {
+            if (error == System.Net.Security.SslPolicyErrors.None)
+            {
+                return true;
+            }
+            Console.WriteLine("X509Certificate [{0}] Policy Error: '{1}'", cert.Subject, error.ToString());
+            return false;
+        }
+    }
+    public class Rootobject
+    {
+        public string success { get; set; }
+        public Result result { get; set; }
+        public Records records { get; set; }
+    }
+    public class Result
+    {
+        public string resource_id { get; set; }
+        public Field[] fields { get; set; }
+    }
+    public class Field
+    {
+        public string id { get; set; }
+        public string type { get; set; }
+    }
+    public class Records
+    {
+        public Station[] Station { get; set; }
+    }
+    public class Station
+    {
+        public string StationName { get; set; }
+        public string StationId { get; set; }
+        public Obstime ObsTime { get; set; }
+        public Geoinfo GeoInfo { get; set; }
+        public Weatherelement WeatherElement { get; set; }
+    }
+    public class Obstime
+    {
+        public DateTime DateTime { get; set; }
+    }
+    public class Geoinfo
+    {
+        public string TownCode { get; set; }
+    }
+    public class Weatherelement
+    {
+        public float AirPressure { get; set; }
     }
 }
