@@ -35,8 +35,10 @@ var InitRainCtrl = function ($_container, options, onlycwb) {
                 d.R1D = d.Acc1DayRainQty;
                 d.R2D = d.Acc2DayRainQty;
                 d.R3D = d.Acc3DayRainQty;
-                if (d.Status == undefined)
-                    d.Status = $.BasePinCtrl.pinIcons.rain.noData.name;
+                //if (d.Status == undefined)
+                //    d.Status = $.BasePinCtrl.pinIcons.rain.noData.name;
+                //20240427, edit by markhong [Tab]雨量站與綜整資訊的數據不同步
+                d.Status = getStatus(JsonDateStr2Datetime(d.InfoTime), d.Acc24HourRainQt, d.Acc1HourRainQty, d.Acc3HourRainQty);
             }
         },
         hourlyFieldsInfo: { DateTime: "InfoTime", RQ: "Acc10MinuteRainQty" },
@@ -56,6 +58,21 @@ var InitRainCtrl = function ($_container, options, onlycwb) {
             return $.BasePinCtrl.helper.getDataStatusLegendIcon(this.settings.legendIcons, s);
         },
     }, options));
+}
+
+function getStatus(dt, r24h, r1h, r3h) {
+    var s = '正常';
+    if (!dt || (Date.now() - JsonDateStr2Datetime(dt).getTime()) >= 6 * 60 * 60 * 1000)
+        s = '無資料';
+    else if (r24h && r24h >= 500)
+        s = '超大豪雨';
+    else if ((r24h && r24h >= 300) || (r3h && r3h >= 200))
+        s = '大豪雨';
+    else if ((r24h && r24h >= 200) || (r3h && r3h >= 100))
+        s = '豪雨';
+    else if ((r24h && r24h >= 80) || (r1h && r1h >= 40))
+        s = '大雨';
+    return s;
 }
 
 var InitWaterCtrl = function ($_container, options) {
