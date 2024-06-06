@@ -141,6 +141,7 @@ namespace RSW.Controllers.Manager
                 return v is RedirectResult || v is RedirectToRouteResult ? v : PartialView(user);
             }
         }
+
         public override ActionResult DouLogoff()
         {
             var r=base.DouLogoff();
