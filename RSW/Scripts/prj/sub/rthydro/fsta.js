@@ -86,16 +86,15 @@
             var t = 0, heavy = 0, extremely = 0, torrential = 0, exttorrential=0;
             if (ds) {
                 $.each(ds, function () {
-                    if (this.Status) {
-                        if (this.Status == $.BasePinCtrl.pinIcons.rain.extremely_torrential.name)
-                            exttorrential++;
-                        else if (this.Status == $.BasePinCtrl.pinIcons.rain.torrential.name)
-                            torrential++;
-                        else if (this.Status == $.BasePinCtrl.pinIcons.rain.extremely.name)
-                            extremely++;
-                        else if (this.Status == $.BasePinCtrl.pinIcons.rain.heavy.name)
-                            heavy++;
-                    }
+                    //20240617, add by markhong 總整資訊的加總，原透過status改由讀取各時段雨量來判斷加總
+                    if (this.R24H && this.R24H >= 500)
+                        exttorrential++;
+                    else if ((this.R24H && this.R24H >= 300) || (this.R3H && this.R3H >= 200))
+                        torrential++;
+                    else if ((this.R24H && this.R24H >= 200) || (this.R3H && this.R3H >= 100))
+                        extremely++;
+                    else if ((this.R24H && this.R24H >= 80) || (this.R1H && this.R1H >= 40))
+                        heavy++;
                 });
                 t = heavy + extremely + torrential + exttorrential;
             }

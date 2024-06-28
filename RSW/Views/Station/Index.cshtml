@@ -1,8 +1,11 @@
-﻿<script src="~/Scripts/prj/BasicStt.js"></script>
+﻿@{
+    var isAdmin = ViewBag.isAdmin ?? false;
+}
+<script src="~/Scripts/prj/BasicStt.js"></script>
 @using Dou.Misc.Extension
 @*@Html.MenuMap()*@
 @Html.DataManagerOptionsJavascript(null, "douoptions")
-
+<input type="hidden" id="isAdmin" value="@isAdmin.ToString().ToLower()" />
 <table id="_table"></table>
 <div class="modal fade" id="ITPopUp" role="dialog">
     <div class="modal-dialog">

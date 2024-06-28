@@ -1,5 +1,6 @@
 ﻿$(document).ready(function () {
     var hasChangeDetails = false;//是否已變更Details資料
+    var ca = $('#isAdmin').val() === 'true';
     var b = {};//遠端控制參數
     b.item = function (v, r) {
         var btn = "";
@@ -12,8 +13,8 @@
     b.callback = function importQdate(evt, value, row, index) {
         ShowRPT(row);
     };
-
-    douoptions.appendCustomFuncs = [b];
+    if (ca)
+        douoptions.appendCustomFuncs = [b];
 
     //Master編輯容器加入Detail
     douoptions.afterCreateEditDataForm = function ($container, row) {

@@ -35,6 +35,8 @@ namespace RSW.Controllers.Api
         public JToken TainanApi(string para0, string para1 = null, string para2 = null, string para3 = null, string para4 = null, string para5 = null, string para6 = null)
         {
             string url = RSW.Startup.AppSet.TainanApiUrl+ $"{para0}";///{info}?jwt={Token()}";
+            ResetGetWaterStation();
+            ResetGetRainStation();
             if (!string.IsNullOrEmpty(para1))
                 url += $"/{para1}";
             if (!string.IsNullOrEmpty(para2))
@@ -47,7 +49,7 @@ namespace RSW.Controllers.Api
                 url += $"/{para5}";
             if (!string.IsNullOrEmpty(para6))
                 url += $"/{para6}";
-            return GetJToken(url);
+            return GetJToken(url);          
         }
        
         #endregion
@@ -84,6 +86,11 @@ namespace RSW.Controllers.Api
                 return result;
             }
         }
+        public static void ResetGetRainStation()
+        {
+            string key = "GetRainStation";
+            DouHelper.Misc.ClearCache(key);
+        }
         #endregion
 
         #region 水位資料
@@ -102,6 +109,11 @@ namespace RSW.Controllers.Api
                 }
                 return result;
             }
+        }
+        public static void ResetGetWaterStation()
+        {
+            string key = "GetRainStation";
+            DouHelper.Misc.ClearCache(key);
         }
         #endregion
 

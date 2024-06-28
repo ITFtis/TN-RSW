@@ -1,8 +1,10 @@
 ﻿using Dou.Controllers;
 using Dou.Misc.Attr;
+using Dou.Models;
 using Dou.Models.DB;
 using RSW.Models;
 using RSW.Models.Data;
+using RSW.Models.Manager;
 using System;
 using System.Collections.Generic;
 using System.EnterpriseServices;
@@ -19,7 +21,26 @@ namespace RSW.Controllers.Prj
         // GET: Country
         public ActionResult Index()
         {
+            ViewBag.isAdmin = Permissions("admin");
             return View();
+        }
+
+        //確認帳號權限
+        public bool Permissions(string RoleId)
+        {
+            bool Permissions = false;
+            var RoleUsers = Dou.Context.CurrentUser<User>().RoleUsers;
+
+            foreach (RoleUser i in RoleUsers)
+            {
+                if (i.RoleId == RoleId)
+                {
+                    Permissions = true;
+                    break;
+                }
+            }
+
+            return Permissions;
         }
 
         protected override IQueryable<BasicStt> BeforeIQueryToPagedList(IQueryable<BasicStt> iquery, params KeyValueParams[] paras)
