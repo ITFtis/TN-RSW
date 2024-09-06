@@ -286,7 +286,12 @@
     <None Include="Scripts\jquery-3.6.4.intellisense.js" />
     <Content Include="Scripts\Dou\Dou.js" />
     <Content Include="Scripts\gis\ext\geocode\LAddressGeocode.js" />
+    <Content Include="Scripts\gis\ext\kml\ALocalKml.js" />
+    <Content Include="Scripts\gis\ext\kml\GLocalKml.js" />
+    <Content Include="Scripts\gis\ext\kml\LLocalKml.js" />
+    <Content Include="Scripts\gis\ext\kml\LocalKml.js" />
     <Content Include="Scripts\gis\ext\meter\BasePinCtrl.js" />
+    <Content Include="Scripts\gis\ext\meter\KmlCtrl.js" />
     <Content Include="Scripts\gis\ext\meter\LBasePinCtrl.js" />
     <Content Include="Scripts\gis\ext\meter\RainCtrl.js" />
     <Content Include="Scripts\gis\ext\meter\WaterCtrl.js" />

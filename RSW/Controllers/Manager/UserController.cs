@@ -50,6 +50,7 @@ namespace RSW.Controllers.Manager
             return new Dou.Models.DB.ModelEntity<User>(RoleController._dbContext);
         }
 
+
         protected override void AddDBObject(IModelEntity<User> dbEntity, IEnumerable<User> objs)
         {
             try

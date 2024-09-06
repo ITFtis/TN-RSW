@@ -147,7 +147,8 @@
             }
             //if (app.flood24hr && app.flood24hr.length > 1000)//turboThreshold預設1000，超過整個series就不會呈現
             //    seriesdef.level.turboThreshold = app.flood24hr.length;
-            _waterchart = charthelper.showMeterChart($_c, s, ds, s.StationName + '-水位歷線圖', '水深(cm)', 0, seriesdef, function (chartoptions) {
+            //20240808, edit by markhong 水深(cm)=>水位高程(M)
+            _waterchart = charthelper.showMeterChart($_c, s, ds, s.StationName + '-水位歷線圖', '水位高程(M)', 0, seriesdef, function (chartoptions) {
                 chartoptions.legend.enabled = false;
             }, function (idx, x, y, p) {
                 charthelper.chartGearingByX(x, [_sewerchart, _fsensorchart, _rainchart]);
