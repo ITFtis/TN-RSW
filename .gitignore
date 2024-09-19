@@ -9,5 +9,4 @@ RSW/bin/app.publish/bin/
 *.vsidx
 RSW/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
 RSW/obj/Debug/RSW.csproj.AssemblyReference.cache
-RSW/Web.config
 .vs/RSW/v17/
