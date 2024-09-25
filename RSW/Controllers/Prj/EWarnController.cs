@@ -17,6 +17,17 @@ namespace RSW.Controllers.Prj
         // GET: EWarn
         public ActionResult Index()
         {
+            ViewBag.qpesums = new List<string>
+            {
+                "2024/09/25 18:40",
+                "2024/09/25 18:30",
+                "2024/09/25 18:20",
+            };
+            return View();
+        }
+
+        public ActionResult List()
+        {
             return View();
         }
     }

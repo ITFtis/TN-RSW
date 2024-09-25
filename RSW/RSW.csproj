@@ -285,6 +285,7 @@
     <Content Include="Content\bootstrap-grid.min.css.map" />
     <Content Include="Content\bootstrap-grid.css.map" />
     <None Include="Data\Tide.json" />
+    <Content Include="Data\model_output_example.kmz" />
     <None Include="Scripts\jquery-3.6.4.intellisense.js" />
     <Content Include="Scripts\Dou\Dou.js" />
     <Content Include="Scripts\gis\ext\geocode\LAddressGeocode.js" />
@@ -393,6 +394,7 @@
     <Content Include="Views\TroubleShoot\Index.cshtml" />
     <Content Include="Views\OnSiteInspection\Index.cshtml" />
     <Content Include="Views\StationFl\Index.cshtml" />
+    <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
