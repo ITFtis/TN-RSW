@@ -127,6 +127,8 @@
         const map = new Map({
             basemap: googleBaseMap // basemap styles service
         });
+
+        $("#map").css("height", "calc(100% - 50px)");
   
         const view = new MapView({
             container: "map",
@@ -134,7 +136,17 @@
             map: map,
             center: [121, 23.7],
             zoom: 8,
-
+            popup: {
+                collapseEnabled: false,
+                dockEnabled: true,
+                dockOptions: {
+                    // Disables the dock button from the popup
+                    buttonEnabled: false,
+                    // Ignore the default sizes that trigger responsive docking
+                    breakpoint: false,
+                    position: 'bottom-left'
+                },
+            }
         });
 
         arcgis_map.map = map;

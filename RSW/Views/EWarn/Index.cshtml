@@ -10,6 +10,9 @@
 </div>
 
 @Html.Partial("_ArcgisMapPartial")
+<div id="color-legend" style="position: absolute; bottom: 60px; right: 20px;padding-top: 20px; width: 100px; background-color: white; border: 3px solid rgba(255,255,255,0.4); ">
+
+</div>
 <script>
 
 
@@ -48,7 +51,9 @@
             const stops = [];
             for (let i = 0; i < scale.length; i += 4) {
                 const c = d3.rgb(scale[i + 0], scale[i + 1], scale[i + 2]).formatHex();
-                stops.push({ value: scale[ i + 3], color: c})
+                const v = scale[i + 3];
+                stops.push({ value: v, color: c });
+                $("#color-legend").append(`<div style='width: 50px; height: 25px; background-color: ${c};'><span style='display: inline-block; margin-left: 55px; position: relative; transform: translateY(-50%);'>${v}</span></div>`);
             }
 
             const renderer = {
@@ -102,7 +107,9 @@
                                 },
                                 attributes: {
                                     OBJECTID: ptr,
-                                    v
+                                    v,
+                                    lon,
+                                    lat
                                 }
                             };
                             list.push(f);
@@ -111,9 +118,7 @@
 
                 }
                 const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
-                if (old_layer) arcgis_map.map.remove(old_layer);
                 const old_kml_layer = arcgis_map.map.findLayerById(LAYER_ID + '-OUTPUT');
-                if (old_kml_layer) arcgis_map.map.remove(old_kml_layer);
                 const layer = arcgis_map.createFeatureLayer({
                     id: LAYER_ID,
                     source: list,  // array of graphics objects
@@ -123,10 +128,25 @@
                         type: "oid"
                     }, {
                         name: "v",
-                        type: "oid"
+                        type: "double"
+                    }, {
+                        name: "lat",
+                        type: "double"
+                    },
+                    {
+                        name: "lon",
+                        type: "double"
                     }],
+                    popupTemplate: {
+                        overwriteActions: true,
+                        title: "1小時預報雨量: {v} mm",
+                        content: "座標: {lon},{lat}"
+                    },
                     renderer
                 });
+                if (old_layer) arcgis_map.map.remove(old_layer);
+                if (old_kml_layer) arcgis_map.map.remove(old_kml_layer);
+
                 arcgis_map.map.add(layer);
 
                 const kmllayer = arcgis_map.createGeoJSONLayer({
@@ -151,7 +171,7 @@
     <h5>預報資料時間：</h5>
     <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
 </div>
-<div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 400px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
+<div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 460px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
     <h5>選擇其他報別：</h5>
     <hr />
     <div id="time-selections">
