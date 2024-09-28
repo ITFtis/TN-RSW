@@ -19,10 +19,9 @@
     function switch_to(e, t) {
         var url = '/api/qpesums/qpf060min/rt';
         if (t) {
-            console.log(t);
             var dt = new Date(t);
-            console.log(dt.toISOString());
-            url = 'api/qpesums/qpf060min/result/' + t.replaceAll('/', '-');
+            var ts = dt.getFullYear() * 100000000 + (dt.getMonth() + 1) * 1000000 + (dt.getDay()) * 10000 + (dt.getHours()) * 100 + dt.getMinutes();
+            url = `api/qpesums/qpf060min/result/${ts}`;
         }
  //       console.log($.AppConfigOptions.baseurl);
         $(".qpesums-selection").css('background', '').css('color', 'black');
