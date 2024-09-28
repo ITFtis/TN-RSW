@@ -21,10 +21,12 @@
     // api/qpesums/qpf060min/time/
     function switch_to(e, t) {
         var url = '/api/qpesums/qpf060min/rt';
+        // Test for all value format
+        // url = `/api/qpesums/qpf060min/result/202409061600`;
         if (t) {
             var dt = new Date(t);
-            var ts = dt.getFullYear() * 100000000 + (dt.getMonth() + 1) * 1000000 + (dt.getDay()) * 10000 + (dt.getHours()) * 100 + dt.getMinutes();
-            url = `api/qpesums/qpf060min/result/${ts}`;
+            var ts = dt.getFullYear() * 100000000 + (dt.getMonth() + 1) * 1000000 + (dt.getDate()) * 10000 + (dt.getHours()) * 100 + dt.getMinutes();
+            url = `/api/qpesums/qpf060min/result/${ts}`;
         }
  //       console.log($.AppConfigOptions.baseurl);
         $(".qpesums-selection").css('background', '').css('color', 'black');
@@ -33,7 +35,6 @@
         }
         $("#loading").show();
         $.get(url).then(response => {
-            $("#qpesum-datetime").text(response.Datetime);
             const content = response.Content.split('\n');
             const meta = content[0].split(',');
             const nx = meta[0] * 1.0;
@@ -44,11 +45,10 @@
             const y1 = meta[6] * 1.0;
             const dx = (x1 - x0) / (nx - 1);
             const dy = (y1 - y0) / (ny - 1);
+            console.log(nx, ny, x0, x1, dx, y0, y1, dy);
             const scale = content[2].split(',').map(x => 1.0 * x);
-            const colIdx = content[4].split(':')[1].split(',').map(x => 1.0 * x);
-            const rowPtr = content[5].split(':')[1].split(',').map(x => 1.0 * x);
-            const data = content[6].split(':')[1].split(',').map(x => 1.0 * x);
             const stops = [];
+            $("#color-legend").html("");
             for (let i = 0; i < scale.length; i += 4) {
                 const c = d3.rgb(scale[i + 0], scale[i + 1], scale[i + 2]).formatHex();
                 const v = scale[i + 3];
@@ -77,8 +77,16 @@
 
             };
 
-            if (arcgis_map.createFeatureLayer) {
-                const list = [];
+            if (!arcgis_map.createFeatureLayer) {
+                console.log('Waiting for arcgis ready');
+                setTimeout(switch_to, 1000);
+            }
+            const list = [];
+            if (content[3].startsWith("ndv:")) {
+                // compact format
+                const colIdx = content[4].split(':')[1].split(',').map(x => 1.0 * x);
+                const rowPtr = content[5].split(':')[1].split(',').map(x => 1.0 * x);
+                const data = content[6].split(':')[1].split(',').map(x => 1.0 * x);
                 let ptr = 0;
                 for (let r = 0; r < ny; r++) {
                     let r1 = rowPtr[r];
@@ -115,51 +123,90 @@
                             list.push(f);
                         }
                     }
-
                 }
-                const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
-                const old_kml_layer = arcgis_map.map.findLayerById(LAYER_ID + '-OUTPUT');
-                const layer = arcgis_map.createFeatureLayer({
-                    id: LAYER_ID,
-                    source: list,  // array of graphics objects
-                    objectIdField: "OBJECTID",
-                    fields: [{
-                        name: "OBJECTID",
-                        type: "oid"
-                    }, {
-                        name: "v",
-                        type: "double"
-                    }, {
-                        name: "lat",
-                        type: "double"
-                    },
-                    {
-                        name: "lon",
-                        type: "double"
-                    }],
-                    popupTemplate: {
-                        overwriteActions: true,
-                        title: "1小時預報雨量: {v} mm",
-                        content: "座標: {lon},{lat}"
-                    },
-                    renderer
-                });
-                if (old_layer) arcgis_map.map.remove(old_layer);
-                if (old_kml_layer) arcgis_map.map.remove(old_kml_layer);
-
-                arcgis_map.map.add(layer);
-
-                const kmllayer = arcgis_map.createGeoJSONLayer({
-                    url: '@Url.Content("~/Content/prj/model_output_example.geojson")',
-                    id: LAYER_ID + '-OUTPUT'// url to the service
-                });
-                arcgis_map.map.add(kmllayer);
-                $("#loading").hide()
+                console.log("features: ", list.length, "ptr", ptr);
+            } else {
+                // all values format
+                let ptr = 0;
+                let skip = 0;
+                for (let r = 0; r < ny; r++) {
+                    const data = content[r + 3].split(',').map(x => x * 1.0);
+                    for (let c = 0; c < nx; c++) {
+                        const v = data[c];
+                        if (!(v >= 0.1)) {
+                            skip++;
+                            continue;
+                        }
+                        ptr++;
+                        const lon = x0 + c * dx;
+                        const lat = y0 + r * dy;
+                        //console.log(lon, lat, c, r, v);
+                        const rings = [
+                            [  // first ring
+                                [lon - dx / 2, lat - dy / 2],
+                                [lon - dx / 2, lat + dy / 2],
+                                [lon + dx / 2, lat + dy / 2],
+                                [lon + dx / 2, lat - dy / 2],
+                                [lon - dx / 2, lat - dy / 2],
+                            ]];
+                        const f = {
+                            geometry: {
+                                type: "polygon",
+                                rings,
+                            },
+                            attributes: {
+                                OBJECTID: ptr,
+                                v,
+                                lon,
+                                lat
+                            }
+                        };
+                        list.push(f);
+                    }
+                }
+                console.log("features: ", list.length, "ptr", ptr, "skip", skip);
             }
-            else {
-                console.log('Waiting for arcgis ready');
-                setTimeout(switch_to, 1000);
-            }
+
+
+            const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
+            const old_kml_layer = arcgis_map.map.findLayerById(LAYER_ID + '-OUTPUT');
+            const layer = arcgis_map.createFeatureLayer({
+                id: LAYER_ID,
+                source: list,  // array of graphics objects
+                objectIdField: "OBJECTID",
+                fields: [{
+                    name: "OBJECTID",
+                    type: "oid"
+                }, {
+                    name: "v",
+                    type: "double"
+                }, {
+                    name: "lat",
+                    type: "double"
+                },
+                {
+                    name: "lon",
+                    type: "double"
+                }],
+                popupTemplate: {
+                    overwriteActions: true,
+                    title: "1小時預報雨量: {v} mm",
+                    content: "座標: {lon},{lat}"
+                },
+                renderer
+            });
+            if (old_layer) arcgis_map.map.remove(old_layer);
+            if (old_kml_layer) arcgis_map.map.remove(old_kml_layer);
+
+            arcgis_map.map.add(layer);
+
+            const kmllayer = arcgis_map.createGeoJSONLayer({
+                url: '@Url.Content("~/Content/prj/model_output_example.geojson")',
+                id: LAYER_ID + '-OUTPUT'// url to the service
+            });
+            arcgis_map.map.add(kmllayer);
+            $("#qpesum-datetime").text(response.Datetime);
+            $("#loading").hide()
         }).fail(() => $("#loading").hide());
     }
 
@@ -171,7 +218,7 @@
     <h5>預報資料時間：</h5>
     <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
 </div>
-<div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 460px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
+<div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 520px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
     <h5>選擇其他報別：</h5>
     <hr />
     <div id="time-selections">
