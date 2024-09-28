@@ -335,6 +335,23 @@ namespace RSW.Controllers.Api
             }
             return result;
         }
+
+        [Route(@"api/qpesums/qpf060min/result/{dt:datetime}")]
+        public QpesumsData GetQpfqpe060minDt(DateTime dt)
+        {
+            var c = GetQpfqpe060min(dt);
+            if (c != null)
+            {
+                return new QpesumsData
+                {
+                    Datetime = dt,//.AddHours(8), //還原UTC+8
+                    Content = c
+                };
+            }
+            return null;
+        }
+
+
         //[Route(@"daterange/{startDate:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}/{endDate:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}")]
         //[Route(@"api/qpesums/qpf060min/time/{dt:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}")]
         [Route(@"api/qpesums/qpf060min/time/{dt:datetime}")]

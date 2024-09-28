@@ -17,12 +17,14 @@ namespace RSW.Controllers.Prj
         // GET: EWarn
         public ActionResult Index()
         {
-            ViewBag.qpesums = new List<string>
+            var dt = DateTime.Now;
+            dt = dt.AddMinutes(-dt.Minute % 10); 
+            var list = new List<string>();
+            foreach(var i in new int[] { -10, -20, -30, -40, -50, -60, -70, -80, -90, -100, -110, -120 })
             {
-                "2024/09/25 18:40",
-                "2024/09/25 18:30",
-                "2024/09/25 18:20",
-            };
+                list.Add(dt.AddMinutes(i).ToString("yyyy/MM/dd HH:mm"));
+            }
+            ViewBag.qpesums = list;
             return View();
         }
 

@@ -3,6 +3,11 @@
 @Html.Partial("MapPartial")
 <link rel="stylesheet" href="~/Content/prj/sub/floodquery.css" />
 <link rel="stylesheet" href="~/Content/prj/rthydro.css" />
+<div id="loading" style="position: sticky; top: 0; left: 0; height: 100vh; width: 100vw; background: rgba(255,255,255,0.4); z-index: 99999; display: none;">
+    <div style="position: absolute; top: 50%; left: 50%; padding: 20px; background: white; border: double 2px rgba(128,128,128); transform: translate(-50%,-50%);">
+        載入中資料，請稍候<img src='@Url.Content("~/Scripts/gis/images/loading/loading_black.gif")' />
+    </div>
+</div>
 
 @Html.Partial("_ArcgisMapPartial")
 <script>
@@ -10,12 +15,22 @@
 
     const LAYER_ID = 'E-WARN';
 
+    // api/qpesums/qpf060min/time/
     function switch_to(e, t) {
+        var url = '/api/qpesums/qpf060min/rt';
+        if (t) {
+            console.log(t);
+            var dt = new Date(t);
+            console.log(dt.toISOString());
+            url = 'api/qpesums/qpf060min/result/' + t.replaceAll('/', '-');
+        }
+ //       console.log($.AppConfigOptions.baseurl);
         $(".qpesums-selection").css('background', '').css('color', 'black');
         if (e && e.target) {
             $(e.target).css('background', 'rgba(12,55,180,0.9)').css('color', 'white');
         }
-        $.get('/api/qpesums/qpf060min/rt').then(response => {
+        $("#loading").show();
+        $.get(url).then(response => {
             $("#qpesum-datetime").text(response.Datetime);
             const content = response.Content.split('\n');
             const meta = content[0].split(',');
@@ -96,8 +111,10 @@
                     }
 
                 }
-                const old_layer = arcgis_map.map.findLayerById('LAYER_ID');
+                const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
                 if (old_layer) arcgis_map.map.remove(old_layer);
+                const old_kml_layer = arcgis_map.map.findLayerById(LAYER_ID + '-OUTPUT');
+                if (old_kml_layer) arcgis_map.map.remove(old_kml_layer);
                 const layer = arcgis_map.createFeatureLayer({
                     id: LAYER_ID,
                     source: list,  // array of graphics objects
@@ -118,12 +135,13 @@
                     id: LAYER_ID + '-OUTPUT'// url to the service
                 });
                 arcgis_map.map.add(kmllayer);
+                $("#loading").hide()
             }
             else {
                 console.log('Waiting for arcgis ready');
                 setTimeout(switch_to, 1000);
             }
-        });
+        }).fail(() => $("#loading").hide());
     }
 
     $(document).ready(switch_to);
@@ -137,7 +155,9 @@
 <div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 400px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
     <h5>選擇其他報別：</h5>
     <hr />
-    @foreach (var t in ViewBag.qpesums)
-    {
-<label class="qpesums-selection" onclick="switch_to(event, '@t')">@t</label><br />}
+    <div id="time-selections">
+        @foreach (var t in ViewBag.qpesums)
+        {
+            <label class="qpesums-selection" onclick="switch_to(event, '@t')">@t</label><br />}
+    </div>
 </div>
