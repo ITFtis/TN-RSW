@@ -1,6 +1,8 @@
 ﻿using Antlr.Runtime.Misc;
 using Dou.Misc.Attr;
 using RSW.Controllers.Comm;
+using RSW.Models.Data;
+using RSW.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,14 +19,9 @@ namespace RSW.Controllers.Prj
         // GET: EWarn
         public ActionResult Index()
         {
-            var dt = DateTime.Now;
-            dt = dt.AddMinutes(-dt.Minute % 10); 
-            var list = new List<string>();
-            foreach(var i in new int[] { -10, -20, -30, -40, -50, -60, -70, -80, -90, -100, -110, -120 })
-            {
-                list.Add(dt.AddMinutes(i).ToString("yyyy/MM/dd HH:mm"));
-            }
-            ViewBag.qpesums = list;
+            List<WaterLevelPrediction> data = DataService.GetData<WaterLevelPrediction>("SELECT * FROM WaterLevelPrediction WHERE predict_mx is not null", new object[0]).ToList();
+            ViewBag.stations = data;
+
             return View();
         }
 

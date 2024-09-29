@@ -219,11 +219,12 @@
     <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
 </div>
 <div style="position: absolute; top: 280px; left: 30px; width: 200px; height: calc(100vh - 520px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
-    <h5>選擇其他報別：</h5>
+    <h5>雨量預報預警水位站：</h5>
     <hr />
     <div id="time-selections">
-        @foreach (var t in ViewBag.qpesums)
+        @foreach (var s in ViewBag.stations)
         {
-            <label class="qpesums-selection" onclick="switch_to(event, '@t')">@t</label><br />}
+            <label>@s.stt_no @s.stt_name</label>
+        }
     </div>
 </div>
