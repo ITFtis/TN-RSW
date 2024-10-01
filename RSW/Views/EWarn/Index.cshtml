@@ -224,7 +224,7 @@
     <div id="time-selections">
         @foreach (var s in ViewBag.stations)
         {
-            <label>@s.stt_no @s.stt_name</label>
+        <label>@s.stt_no @s.stt_name 公式：y = @s.predict_mx * 預報雨量 + @s.predict_dy </label>
         }
     </div>
 </div>
