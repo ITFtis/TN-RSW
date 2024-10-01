@@ -1,6 +1,8 @@
 ﻿using Antlr.Runtime.Misc;
 using Dou.Misc.Attr;
 using RSW.Controllers.Comm;
+using RSW.Models.Data;
+using RSW.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,14 @@ namespace RSW.Controllers.Prj
     {
         // GET: EWarn
         public ActionResult Index()
+        {
+            List<WaterLevelPrediction> data = DataService.GetData<WaterLevelPrediction>("SELECT * FROM WaterLevelPrediction WHERE predict_mx is not null", new object[0]).ToList();
+            ViewBag.stations = data;
+
+            return View();
+        }
+
+        public ActionResult List()
         {
             return View();
         }

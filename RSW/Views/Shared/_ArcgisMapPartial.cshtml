@@ -1,0 +1,162 @@
+﻿<!-- use arcgis js sdk -->
+<div class="tools-group-panel" id="arcgis-mapcontrol" style="position: absolute; top: 120px; right: 30px;"></div>
+
+<link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+<script src="https://js.arcgis.com/4.30/"></script>
+<script>const arcgis_map = {
+        basemap_selections: {},
+    };
+    $(document).ready(function () {
+        $("#basemapDiv").html(
+            `
+<div class="btn-group" id="new-basemap-group" data-toggle="buttons">
+<label class="btn btn-primary active" data-gtype="街圖"><input type="radio" name="tiles_options"> 街圖</label>
+<label class="btn btn-primary" data-gtype="衛星"><input type="radio" name="tiles_options"> 衛星</label>
+<label class="btn btn-primary" data-gtype="地形"><input type="radio" name="tiles_options"> 地形</label>
+<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="true" id="gtype-other">其他<span class="caret"></span></button>
+<ul class="dropdown-menu" role="menu" data-popper-placement="bottom-end" style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 40px);">
+<li><a href="#" class="dropdown-item" data-gtype="灰階">灰階</a></li>
+<li><a href="#" class="dropdown-item" data-gtype="通用版電子地圖">通用版電子地圖</a></li>
+</ul></div></div>`
+        );
+        $("#new-basemap-group [data-gtype]").off().on('click', function () {
+            const new_basemap = $(this).data('gtype');
+            arcgis_map.map.basemap = arcgis_map.basemap_selections[new_basemap];
+            $("#new-basemap-group [data-gtype]").removeClass("active");
+            $("#gtype-other").removeClass("active");
+            $(this).addClass("active");
+            if (this.tagName == "a") {
+                $("#gtype-other").addClass("active");
+            }
+        });
+    });</script>
+<script>function custom_arcgis_ui(i = 0) {
+        const zoom_control = $(".esri-component.esri-zoom.esri-widget");
+        if (zoom_control.length) {
+            zoom_control.appendTo("#arcgis-mapcontrol");
+            setTimeout(() => arcgis_map.view.goTo(arcgis_map.fullextent), 300);
+        } else {
+            if (i < 30) {
+                setTimeout(() => custom_arcgis_ui(i + 1), 200);
+            }
+        }
+    }
+    const esriConfig = {};
+    require([
+        "esri/config",
+        "esri/Map",
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/widgets/ScaleBar",
+        "esri/widgets/Legend",
+        "esri/Basemap",
+
+        "esri/layers/WMTSLayer",
+        "esri/layers/MapImageLayer",
+        "esri/layers/OpenStreetMapLayer",
+        "esri/layers/WebTileLayer",
+
+        "esri/geometry/Extent",
+        "esri/layers/GraphicsLayer",
+        "esri/layers/FeatureLayer",
+        "esri/layers/GeoJSONLayer",
+        "esri/Graphic",
+        "esri/widgets/Feature",
+    ], function (esriConfig, Map, WebMap, MapView, ScaleBar, Legend, Basemap, WMTSLayer, MapImageLayer, OpenStreetMapLayer, WebTileLayer, Extent, GraphicsLayer, FeatureLayer, GeoJSONLayer, Graphic, Feature) {
+        arcgis_map.fullextent = new Extent({
+            // 台南市
+            xmax: 120.65587722,
+            ymax: 23.4131556406,
+            xmin: 120.03137722,
+            ymin: 22.8889556406
+        });
+
+        const googleLayer = new WebTileLayer({
+            activeLayer: {
+                id: "googleLayer"
+            },
+            urlTemplate: "https://mt1.google.com/vt/lyrs=m&hl=zh-TW&x={col}&y={row}&z={level}"
+        }), googleBaseMap = new Basemap({
+            baseLayers: [googleLayer]
+        });
+        arcgis_map.basemap_selections['街圖'] = googleBaseMap;
+
+        const googleGrayLayer = new WebTileLayer({
+            activeLayer: {
+                id: "googleGrayLayer"
+            },
+            urlTemplate: "https://mt1.google.com/vt/lyrs=m&hl=zh-TW&x={col}&y={row}&z={level}",
+            effect: "grayscale(0.9)"
+        }), googleGrayBaseMap = new Basemap({
+            baseLayers: [googleGrayLayer]
+        });
+        arcgis_map.basemap_selections['灰階'] = googleGrayBaseMap;
+
+
+        const googleHybridLayer = new WebTileLayer({
+            activeLayer: {
+                id: "googleHybridLayer"
+            },
+            urlTemplate: "https://mt1.google.com/vt/lyrs=y&hl=zh-TW&x={col}&y={row}&z={level}&s=Galile"
+        }), googleHybridBaseMap = new Basemap({
+            baseLayers: [googleHybridLayer]
+        });
+        arcgis_map.basemap_selections['衛星'] = googleHybridBaseMap;
+
+        const googleLandLayer = new WebTileLayer({
+            activeLayer: {
+                id: "googleLandLayer"
+            },
+            urlTemplate: "https://mt1.google.com/vt/lyrs=p&hl=zh-TW&x={col}&y={row}&z={level}&s=Gali"
+        }), googleLandBaseMap = new Basemap({
+            baseLayers: [googleLandLayer]
+        });
+        arcgis_map.basemap_selections['地形'] = googleLandBaseMap;
+
+        const nlscLayer = new WMTSLayer({
+            activeLayer: {
+                id: "EMAP"
+            },
+            url: "https://wmts.nlsc.gov.tw/wmts"
+        }), nlscBaseMap = new Basemap({
+            baseLayers: [nlscLayer]
+        });
+        arcgis_map.basemap_selections['通用版電子地圖'] = nlscBaseMap;
+
+
+        const map = new Map({
+            basemap: googleBaseMap // basemap styles service
+        });
+
+        $("#map").css("height", "calc(100% - 50px)");
+  
+        const view = new MapView({
+            container: "map",
+
+            map: map,
+            center: [121, 23.7],
+            zoom: 8,
+            popup: {
+                collapseEnabled: false,
+                dockEnabled: true,
+                dockOptions: {
+                    // Disables the dock button from the popup
+                    buttonEnabled: false,
+                    // Ignore the default sizes that trigger responsive docking
+                    breakpoint: false,
+                    position: 'bottom-left'
+                },
+            }
+        });
+
+        arcgis_map.map = map;
+        arcgis_map.view = view;
+        arcgis_map.createFeatureLayer = (p) => new FeatureLayer(p);
+        arcgis_map.createGraphicLayer = (p) => new GraphicLayer(p);
+        arcgis_map.createMapImageLayer = (p) => new MapImageLayer(p);
+        arcgis_map.createGeoJSONLayer = (p) => new GeoJSONLayer(p);
+        arcgis_map.createFeature = (p) => new Feature(p);
+        arcgis_map.createGraphic = (p) => new Graphic(p);
+
+        custom_arcgis_ui();
+    });</script>

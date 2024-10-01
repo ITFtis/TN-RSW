@@ -335,6 +335,25 @@ namespace RSW.Controllers.Api
             }
             return result;
         }
+
+        // using YYYYMMDDHHmm format as a long, to avoid /: in path
+        [Route(@"api/qpesums/qpf060min/result/{ts}")]
+        public QpesumsData GetQpfqpe060minDt(long ts)
+        {
+            DateTime dt = new DateTime((int)(ts / 100000000), (int)(ts / 1000000 % 100), (int)(ts / 10000 % 100), (int)(ts / 100 % 100), (int)(ts % 100), 0);
+            var c = GetQpfqpe060min(dt);
+            if (c != null)
+            {
+                return new QpesumsData
+                {
+                    Datetime = dt,//.AddHours(8), //還原UTC+8
+                    Content = c
+                };
+            }
+            return null;
+        }
+
+
         //[Route(@"daterange/{startDate:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}/{endDate:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}")]
         //[Route(@"api/qpesums/qpf060min/time/{dt:regex(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$)}")]
         [Route(@"api/qpesums/qpf060min/time/{dt:datetime}")]

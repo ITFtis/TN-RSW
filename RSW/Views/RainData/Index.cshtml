@@ -1,4 +1,52 @@
-﻿<br>
-<br>
-<br>
-<H3 style="text-align:center">建置中...</H3>
+﻿@Html.Partial("MapPartial")
+<link rel="stylesheet" href="~/Content/prj/sub/floodquery.css" />
+<link rel="stylesheet" href="~/Content/prj/rthydro.css" />
+
+@Html.Partial("_ArcgisMapPartial")
+
+<div id="arcgis_legend" style="position: absolute; top: 70px; left: 30px; width: 300px; max-height: 530px; overflow-y: hidden; transform: scale(0.9); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+</div>
+
+<script>
+    function add_layer() {
+        if (arcgis_map.createMapImageLayer) {
+            const mapserver = arcgis_map.createMapImageLayer({
+                url: 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer',
+                sublayers: [
+                    {
+                        id: 4,
+                        visible: true
+                    },
+                    {
+                        id: 3,
+                        visible: true
+                    },
+                    {
+                        id: 2,
+                        visible: true
+                    },
+                    {
+                        id: 1,
+                        visible: true
+                    },
+                    {
+                        id: 0,
+                        visible: true
+                    }
+                ]
+            });
+            arcgis_map.map.add(mapserver);
+            $.get('https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/legend').then(html => {
+                const dom = $.parseHTML(html);
+                const div = dom.find(x => x.tagName == 'DIV' && x.className == 'rbody');
+                $("#arcgis_legend").html(
+                    div.outerHTML
+                );
+            });
+        } else {
+            setTimeout(add_layer, 1000);
+        }
+    }
+
+    $(document).ready(add_layer);
+</script>
