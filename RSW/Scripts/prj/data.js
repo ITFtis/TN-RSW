@@ -515,6 +515,7 @@ if (location.href.indexOf('.ftis.') >= 0 || location.href.indexOf('localhost') >
         //var sdd = JsonDateStr2Datetime('2020/10/01 00:00:01').toJSON();
         //getTideBase();
         getTown();
+
         getSewerBase(function (dsdf, sda) {
             var as = dsdf;
         });

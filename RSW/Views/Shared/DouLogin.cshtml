@@ -143,7 +143,7 @@
         </div>
         <div class="form-container">
             @************重設User controller****************@
-            @using (Html.BeginForm("DouLogin", "User", new { ReturnUrl = ViewBag.ReturnUrl, re = true }, FormMethod.Post))
+            @using (Html.BeginForm("DouLogin", "User", new { ReturnUrl = ViewBag.ReturnUrl, re = true }, FormMethod.Post, new { id = "loginForm" }))
             {
                 <h4>使用者登入</h4>
                 <hr>
@@ -166,11 +166,66 @@
                         </span>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-success col-sm-12" value="@ViewBag.ReturnUrl"> 送 出 </button>
+                <button type="button" class="btn btn-success col-sm-12" id="loginButton" value="@ViewBag.ReturnUrl"> 送 出 </button>
                 <div class="clearfix"></div>
             }
         </div>
+        <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="announcementModalLabel">【系統公告】</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-body">
+                            <ol>
+                                <li>雨水下水道水位監測站預設顯示一、二、三級水位站，如需查看正常水位站，請點選「測站即時監控資訊-下水道」並點選正常及無資料測。</li>
+                                <li>
+                                    各級別代表意義:
+                                    <ul>
+                                        <li>一級:路面(人孔)高程</li>
+                                        <li>二級:滿管高程</li>
+                                        <li>三級:半滿管高程</li>
+                                    </ul>
+                                    前揭級別係原則，為因應實際監測需求，海水感潮區域警戒值將依個案安排，如有變更需求可洽業務科室。
+                                </li>
+                                <li>
+                                    本系統為臺南市政府水利局雨水下水道科維護管理委託遠傳電信股份有限公司系統整合分公司建置及維護管理，聯絡資訊如下:
+                                    <ul>
+                                        <li>廠商聯絡人:王俊傑</li>
+                                        <li>廠商連絡電話:0912-077226</li>
+                                        <li>廠商聯絡信件:jaywang2@fareastone.com.tw</li>
+                                        <li>機關聯絡人: 林哲琦 工程員</li>
+                                        <li>機關聯絡電話: 06-2986672分機7658</li>
+                                        <li>電子郵件:d40118g@mail.tainan.gov.tw</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            <p>公告日期:113.5.10</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="submitLogin()">確認</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <!-- 20240520, add by markhong 公告模態框 -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#loginButton').click(function (e) {
+                e.preventDefault(); // 阻止表單的默認提交動作，讓我們能控制提交時機
+                $('#announcementModal').modal('show');
+                setTimeout(function () {
+                    $('#loginForm').submit(); // 延遲五秒後提交表單
+                }, 5000);
+            });
+        });
+        function submitLogin() {
+            $('#loginForm').submit();  // 提交表單
+        }
+    </script>
 </body>
 </html>
 <script>
