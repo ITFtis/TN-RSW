@@ -217,11 +217,13 @@
     <Compile Include="Models\Data\TroubleShootingData.cs" />
     <Compile Include="Models\Data\v_RealTimeReliable_Day.cs" />
     <Compile Include="Models\Data\v_RealTimeReliable_Month.cs" />
+    <Compile Include="Models\Data\WaterLevelPrediction.cs" />
     <Compile Include="Models\DouModelContextExt.cs" />
     <Compile Include="Models\Manager\Role.cs" />
     <Compile Include="Models\Manager\User.cs" />
     <Compile Include="Models\TNModelContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\DataService.cs" />
     <Compile Include="Services\LineMessageService.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="_core\AppConfig.cs" />
