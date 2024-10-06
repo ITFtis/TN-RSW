@@ -205,11 +205,14 @@ namespace RSW.Controllers.Api
                             {
                                 try
                                 {
-                                    var parts = line.Split(null);
+                                    var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
                                     var lon = Convert.ToDecimal(parts[0]);
                                     var lat = Convert.ToDecimal(parts[1]);
                                     var val = Convert.ToDecimal(parts[2]);
-                                    output.Add($"{lon},{lat},{val}");
+                                    if (val > 0)
+                                    {
+                                        output.Add($"{lon},{lat},{val}");
+                                    }
                                 }
                                 catch (Exception ignore)
                                 {

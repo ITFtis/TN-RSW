@@ -84,6 +84,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
@@ -178,6 +179,7 @@
     <Compile Include="Controllers\Api\CctvController.cs" />
     <Compile Include="Controllers\Api\DataController.cs" />
     <Compile Include="Controllers\Api\LineController.cs" />
+    <Compile Include="Controllers\Api\ModelDataController.cs" />
     <Compile Include="Controllers\Api\RainController.cs" />
     <Compile Include="Controllers\Comm\NoModelController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -401,6 +403,7 @@
     <Content Include="Views\OnSiteInspection\Index.cshtml" />
     <Content Include="Views\StationFl\Index.cshtml" />
     <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
+    <Content Include="Views\Shared\_ArcgisQpesums.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -434,7 +437,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>65399</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>https://localhost:44331/</IISUrl>
+          <IISUrl>https://localhost:44331/RSW</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

@@ -1,11 +1,17 @@
 ﻿<!-- use arcgis js sdk -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<div id="loading" style="position: sticky; top: 0; left: 0; height: 100vh; width: 100vw; background: rgba(255,255,255,0.4); z-index: 99999; display: none;">
+    <div style="position: absolute; top: 50%; left: 50%; padding: 20px; background: white; border: double 2px rgba(128,128,128); transform: translate(-50%,-50%);">
+        載入資料中，請稍候<img src='@Url.Content("~/Scripts/gis/images/loading/loading_black.gif")' />
+    </div>
+</div>
 <div class="tools-group-panel" id="arcgis-mapcontrol" style="position: absolute; top: 120px; right: 30px;"></div>
 <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
 <script src="https://js.arcgis.com/4.30/"></script>
 <script>
     const arcgis_map = {
         basemap_selections: {},
+        ready: false
     };
     $(document).ready(function () {
         $("#basemapDiv").html(
@@ -159,6 +165,8 @@
         arcgis_map.createGeoJSONLayer = (p) => new GeoJSONLayer(p);
         arcgis_map.createFeature = (p) => new Feature(p);
         arcgis_map.createGraphic = (p) => new Graphic(p);
+
+        arcgis_map.ready = true;
 
         custom_arcgis_ui();
     });</script>

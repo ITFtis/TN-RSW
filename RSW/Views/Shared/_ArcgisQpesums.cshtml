@@ -2,11 +2,116 @@
 </div>
 <script>
     // api/qpesums/qpf060min/time/
-    const QPESUMS_LAYER_ID = 'QPESUMS_LAYER_ID';
+    const qpesums = {};
+    qpesums.LAYER_ID = 'QPESUMS_LAYER_ID';
+    qpesums.create_grid_feature = function(ptr, lon, lat, dx, dy, v) {
+        const rings = [
+            [  // first ring
+                [lon - dx / 2, lat - dy / 2],
+                [lon - dx / 2, lat + dy / 2],
+                [lon + dx / 2, lat + dy / 2],
+                [lon + dx / 2, lat - dy / 2],
+                [lon - dx / 2, lat - dy / 2],
+            ]];
+        const f = {
+            geometry: {
+                type: "polygon",
+                rings,
+            },
+            attributes: {
+                OBJECTID: ptr,
+                v,
+                lon,
+                lat
+            }
+        };
+        return f;
+    }
+    qpesums.update_qpesums_layer = function (list, popupMsg) {
+        const old_layer = arcgis_map.map.findLayerById(qpesums.LAYER_ID);
+        const layer = arcgis_map.createFeatureLayer({
+            id: qpesums.LAYER_ID,
+            source: list,  // array of graphics objects
+            objectIdField: "OBJECTID",
+            fields: [{
+                name: "OBJECTID",
+                type: "oid"
+            }, {
+                name: "v",
+                type: "double"
+            }, {
+                name: "lat",
+                type: "double"
+            },
+            {
+                name: "lon",
+                type: "double"
+            }],
+            popupTemplate: {
+                overwriteActions: true,
+                title: popupMsg,
+                content: "座標: {lon},{lat}"
+            },
+            opacity: 0.5,
+            renderer: qpesums.renderer
+        });
+        if (old_layer) arcgis_map.map.remove(old_layer);
+        arcgis_map.map.add(layer, 0);
+    }
+    function parse_opendata_json(data) {
+        const list = [];
+        const meta = data.cwaopendata.dataset.datasetInfo;
+        const param = meta.parameterSet;
+        const nx = param.GridDimensionX * 1;
+        const ny = param.GridDimensionY * 1;
+        const x0 = param.StartPointLongitude * 1.0;
+        const y0 = param.StartPointLatitude * 1.0;
+        const dx = param.GridResolution * 1.0;
+        const dy = param.GridResolution * 1.0;
+
+        let ptr = 0;
+        let idx = 0;
+        let skip = 0;
+        const content = data.cwaopendata.dataset.contents.content.split(',');
+        for (let r = 0; r < ny; r++) {
+            for (let c = 0; c < nx; c++) {
+                const v = content[idx].trim() == '0.000E+00' ? 0 : content[idx] * 1.0;
+                idx++;
+                if (!(v >= 0.1)) {
+                    skip++;
+                    continue;
+                }
+                ptr++;
+                const lon = x0 + c * dx;
+                const lat = y0 + r * dy;
+                list.push(qpesums.create_grid_feature(ptr, lon, lat, dx, dy, v));
+            }
+        }
+        console.log("features: ", list.length, "ptr", ptr, "skip", skip);
+        return list;
+    }
+    function qpesum_last_60m() {
+        var d3_ready = (typeof d3 !== 'undefined');
+
+        if (!arcgis_map.ready || !d3_ready) {
+            console.log('Waiting for arcgis & d3 ready');
+            setTimeout(qpesum_last_60m, 1000);
+            return;
+        }
+        var url = app.siteRoot + 'api/qpesums/last60min';
+        $("#loading").show();
+        $.get(url).then(response => {
+            const data = JSON.parse(response.Content);
+            const list = parse_opendata_json(data);
+            qpesums.update_qpesums_layer(list, "1小時觀測雨量: {v} mm");
+            $("#qpesum-datetime").text(response.Datetime);
+            $("#loading").hide();
+        }).fail(() => $("#loading").hide());
+    }
     function qpesum_forecast_60m(e, t) {
         var d3_ready = (typeof d3 !== 'undefined');
 
-        if (!arcgis_map.createFeatureLayer || !d3_ready) {
+        if (!arcgis_map.ready || !d3_ready) {
             console.log('Waiting for arcgis & d3 ready');
             setTimeout(qpesum_forecast_60m, 1000);
             return;
@@ -45,7 +150,7 @@
                 const c = d3.rgb(scale[i + 0], scale[i + 1], scale[i + 2]).formatHex();
                 const v = scale[i + 3];
                 stops.push({ value: v, color: c });
-                $("#qpesum-color-legend").append(`<div style='width: 50px; height: 25px; background-color: ${c};'><span style='display: inline-block; margin-left: 55px; position: relative; transform: translateY(-50%);'>${v}</span></div>`);
+                $("#qpesum-color-legend").append(`<div style='width: 50px; height: 25px;'><span style='display: inline-block; height: 100%; width: 100%; background-color: ${c}; opacity: 0.5;'></span><span style='font-weight: 800; display: inline-block; margin-left: 2px; position: absolute; '>${v}</span></div>`);
             }
 
             const renderer = {
@@ -58,7 +163,6 @@
                         width: 0.5
                     }
                 },
-
                 visualVariables: [
                     {
                         type: "color",
@@ -66,8 +170,8 @@
                         stops
                     }
                 ]
-
             };
+            qpesums.renderer = renderer;
             const list = [];
             if (content[3].startsWith("ndv:")) {
                 // compact format
@@ -83,31 +187,10 @@
                         for (let n = 0; n < nv; n++) {
                             const c = colIdx[ptr];
                             const v = data[ptr];
-                            ptr++;
                             const lon = x0 + c * dx;
                             const lat = y0 + r * dy;
-                            //                            console.log(lon, lat, v);
-                            const rings = [
-                                [  // first ring
-                                    [lon - dx / 2, lat - dy / 2],
-                                    [lon - dx / 2, lat + dy / 2],
-                                    [lon + dx / 2, lat + dy / 2],
-                                    [lon + dx / 2, lat - dy / 2],
-                                    [lon - dx / 2, lat - dy / 2],
-                                ]];
-                            const f = {
-                                geometry: {
-                                    type: "polygon",
-                                    rings,
-                                },
-                                attributes: {
-                                    OBJECTID: ptr,
-                                    v,
-                                    lon,
-                                    lat
-                                }
-                            };
-                            list.push(f);
+                            ptr++;
+                            list.push(qpesums.create_grid_feature(ptr, lon, lat, dx, dy, v));
                         }
                     }
                 }
@@ -127,63 +210,13 @@
                         ptr++;
                         const lon = x0 + c * dx;
                         const lat = y0 + r * dy;
-                        //console.log(lon, lat, c, r, v);
-                        const rings = [
-                            [  // first ring
-                                [lon - dx / 2, lat - dy / 2],
-                                [lon - dx / 2, lat + dy / 2],
-                                [lon + dx / 2, lat + dy / 2],
-                                [lon + dx / 2, lat - dy / 2],
-                                [lon - dx / 2, lat - dy / 2],
-                            ]];
-                        const f = {
-                            geometry: {
-                                type: "polygon",
-                                rings,
-                            },
-                            attributes: {
-                                OBJECTID: ptr,
-                                v,
-                                lon,
-                                lat
-                            }
-                        };
-                        list.push(f);
+                        list.push(qpesums.reate_grid_feature(ptr, lon, lat, dx, dy, v));
                     }
                 }
                 console.log("features: ", list.length, "ptr", ptr, "skip", skip);
             }
 
-
-            const old_layer = arcgis_map.map.findLayerById(QPESUMS_LAYER_ID);
-            const layer = arcgis_map.createFeatureLayer({
-                id: QPESUMS_LAYER_ID,
-                source: list,  // array of graphics objects
-                objectIdField: "OBJECTID",
-                fields: [{
-                    name: "OBJECTID",
-                    type: "oid"
-                }, {
-                    name: "v",
-                    type: "double"
-                }, {
-                    name: "lat",
-                    type: "double"
-                },
-                {
-                    name: "lon",
-                    type: "double"
-                }],
-                popupTemplate: {
-                    overwriteActions: true,
-                    title: "1小時預報雨量: {v} mm",
-                    content: "座標: {lon},{lat}"
-                },
-                renderer
-            });
-            if (old_layer) arcgis_map.map.remove(old_layer);
-
-            arcgis_map.map.add(layer, 15);
+            qpesums.update_qpesums_layer(list, "1小時預報雨量: {v} mm");
 
             $("#qpesum-datetime").text(response.Datetime);
             $("#loading").hide()

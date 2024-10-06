@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Http;
 using System.Xml.Linq;
@@ -380,6 +381,37 @@ namespace RSW.Controllers.Api
             }
             return result;
         }
+
+        private static Regex FIND_DATETIME = new Regex("\"DateTime\": \"([-0-9T+:]+)\"", RegexOptions.Multiline);
+        [Route(@"api/qpesums/last60min")]
+        public QpesumsData GetQpesumsLast60Mins()
+        {
+            string data_url = "https://opendata.cwa.gov.tw/webapi/datasetExample/O-B0045-001/JSON";
+            string result = null;
+            try
+            {
+                using (WebClient wc = new WebClient())
+                {
+                    var stream = wc.OpenRead(data_url);
+                    using (StreamReader sr = new StreamReader(stream))
+                    {
+                        result = sr.ReadToEnd();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var ss = ex;
+            }
+            var match = FIND_DATETIME.Match(result);
+            var datetime = match.Success ? DateTime.Parse(match.Groups[1].Value) : DateTime.Now;
+            return new QpesumsData
+            {
+                Datetime = datetime,
+                Content = result
+            };
+        }
+
         public class QpesumsData
         {
             public DateTime Datetime { set; get; }

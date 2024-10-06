@@ -9,44 +9,83 @@
 </div>
 
 <script>
+    const MAP_SERVER = 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer';
+    function switch_rain_data() {
+      const h = $("#select_rain_data").val() * 1;
+      switch (h) {
+        case 0:
+            qpesum_last_60m();
+            return;
+        default:
+            csv_data(h);
+            break;
+      }
+    }
+    function csv_data(h) {
+       const list_url = `${app.siteRoot}api/model/input/grid_rain/list`;
+       $.get(list_url).then(response => {
+          if (response && response[0]) {
+            $("#loading").show();
+            const t0 = response[0].split(',')[0];
+            const data_url = `${app.siteRoot}api/model/input/grid_rain/${t0}/${h}`;
+            $.get(data_url).then(data => {
+                const content = data.split("\n");
+                let ptr = 0;
+                const list = [];
+                for (var r of content) {
+                   ptr++;
+                   const parts = r.split(',');
+                   const f = qpesums.create_grid_feature(ptr, parts[0] * 1.0, parts[1]* 1.0, 0.0125, 0.0125, parts[2] * 1.0);
+                   list.push(f);                 
+                }
+                qpesums.update_qpesums_layer(list, "1小時預報雨量: {v} mm");
+                $("#qpesum-datetime").text(t0);
+                $("#loading").hide();
+            }).fail(()=>$("#loading").hide());
+          } else {
+            alert("無預報雨量資料！");
+          }
+       });
+    }
     function add_layer() {
-        if (arcgis_map.createMapImageLayer) {
-            const mapserver = arcgis_map.createMapImageLayer({
-                url: 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer',
-                sublayers: [
-                    {
-                        id: 4,
-                        visible: true
-                    },
-                    {
-                        id: 3,
-                        visible: true
-                    },
-                    {
-                        id: 2,
-                        visible: true
-                    },
-                    {
-                        id: 1,
-                        visible: true
-                    },
-                    {
-                        id: 0,
-                        visible: true
-                    }
-                ]
-            });
-            arcgis_map.map.add(mapserver, 1);
-            $.get('https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/legend').then(html => {
-                const dom = $.parseHTML(html);
-                const div = dom.find(x => x.tagName == 'DIV' && x.className == 'rbody');
-                $("#arcgis_legend").html(
-                    div.outerHTML
-                );
-            });
-        } else {
+        if (!arcgis_map.ready)
+        {
             setTimeout(add_layer, 1000);
+            return;
         }
+        const mapserver = arcgis_map.createMapImageLayer({
+            url: MAP_SERVER,
+            sublayers: [
+                {
+                    id: 4,
+                    visible: true
+                },
+                {
+                    id: 3,
+                    visible: true
+                },
+                {
+                    id: 2,
+                    visible: true
+                },
+                {
+                    id: 1,
+                    visible: true
+                },
+                {
+                    id: 0,
+                    visible: true
+                }
+            ]
+        });
+        arcgis_map.map.add(mapserver, 2);
+        $.get(MAP_SERVER + '/legend').then(html => {
+            const dom = $.parseHTML(html);
+            const div = dom.find(x => x.tagName == 'DIV' && x.className == 'rbody');
+            $("#arcgis_legend").html(
+                div.outerHTML
+            );
+        });
     }
 
     $(document).ready(function () {
@@ -54,9 +93,23 @@
         qpesum_forecast_60m();
     });
 </script>
-<div style="position: absolute; top: 600px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-    <h5>預報資料類型：</h5>
-    <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
-    <h5>預報資料時間：</h5>
+<div style="position: absolute; top: 570px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+    <h5>雨量資料類型：</h5>
+    <select id="select_rain_data" style="color: rgb(14 8 100); font-weight: 800;" onchange="switch_rain_data()">
+        <option value="0">QPESUMS一小時觀測雨量</option>
+        <option selected value="1">QPESUMS第一小時累積雨量</option>
+        <option value="2">QPESUMS第二小時累積雨量</option>
+        <option value="3">QPESUMS第三小時累積雨量</option>
+        <option value="4">WRF第四小時累積雨量</option>
+        <option value="5">WRF第五小時累積雨量</option>
+        <option value="6">WRF第六小時累積雨量</option>
+        <option value="7">WRF第七小時累積雨量</option>
+        <option value="8">WRF第八小時累積雨量</option>
+        <option value="9">WRF第九小時累積雨量</option>
+        <option value="10">WRF第10小時累積雨量</option>
+        <option value="11">WRF第11小時累積雨量</option>
+        <option value="12">WRF第12小時累積雨量</option>
+    </select>
+    <h5>雨量資料時間：</h5>
     <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
 </div>
