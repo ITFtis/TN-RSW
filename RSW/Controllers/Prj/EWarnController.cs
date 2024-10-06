@@ -19,7 +19,7 @@ namespace RSW.Controllers.Prj
         // GET: EWarn
         public ActionResult Index()
         {
-            List<WaterLevelPrediction> data = DataService.GetData<WaterLevelPrediction>("SELECT * FROM WaterLevelPrediction WHERE predict_mx is not null", new object[0]).ToList();
+            List<WaterLevelPrediction> data = DataService.GetData<WaterLevelPrediction>(DataService.DB_DOU, "SELECT * FROM WaterLevelPrediction WHERE predict_mx is not null").ToList();
             ViewBag.stations = data;
 
             return View();

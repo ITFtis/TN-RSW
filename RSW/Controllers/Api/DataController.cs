@@ -98,7 +98,7 @@ namespace RSW.Controllers.Api
         [Route("api/water/base")]
         public IEnumerable<JToken> GetWaterStation()
         {
-            string key = "GetRainStation";
+            string key = "GetWaterStation";
             lock (GetWaterStationLocker)
             {
                 var result = DouHelper.Misc.GetCache<IEnumerable<JToken>>(30 * 60 * 1000, key);
@@ -112,7 +112,7 @@ namespace RSW.Controllers.Api
         }
         public static void ResetGetWaterStation()
         {
-            string key = "GetRainStation";
+            string key = "GetWaterStation";
             DouHelper.Misc.ClearCache(key);
         }
         #endregion
