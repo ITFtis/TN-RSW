@@ -1,0 +1,17 @@
+1. 資料交換位置 (將由排程作業自動產製):
+    INPUT_DATA_PATH = "~/Data/TO_NCKU";  // 氣象資料
+	OUTPUT_PATH = "~/Data/NCKU_OUTPUT";  // 模式結果資料
+	
+	測試用資料 https://drive.google.com/file/d/1NwVdKkUacv68MjfMX4YfztIkZH8X5k5x/view?usp=drive_link
+
+
+2. api說明：
+  - api/model/input/waterlevel/list 最近一週水位計資料時間
+  - api/model/input/waterlevel/{time} 指定時間之水位計資料 (不限一週內)
+      時間格式 202308170100, 對應至水位資料格式 202308170100.LEVEL.TXT, 其中 -999 代表該水位計當時未回報資料
+  - api/model/input/grid_rain/list 目前有氣象資料的時間, 第二個參數是資料下載點, 對應至雨量預報格式
+  - api/model/input/grid_rain/{t0}/{h} 從指定時間雨量預報資料解出第 h 小時的資料
+      對應至 grid_rain_0000.000 - grid_rain_0000.012 的資料部份, 主要供圖台應用
+  - api/model/result/list 目前有模式資料的時間
+  - api/model/result/{t0}/{h} 從指定時間模式資料解出第 h 小時的資料, 轉 geojson 供圖台應用
+        對應至 TNPI.20230809.2100.DEPTH.RT.TXT 及 TNPI.20230809.2100.DEPTH.01H - TNPI.20230809.2100.DEPTH.12H, 主要供圖台應用
