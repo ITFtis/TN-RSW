@@ -21,7 +21,7 @@ namespace RSW.Controllers.Api
         private static TimeSpan CACHE_INTERVAL = TimeSpan.FromMinutes(60);
         private const string OUTPUT_PATH = "~/Data/NCKU_OUTPUT";
         private const string INPUT_DATA_PATH = "~/Data/TO_NCKU";
-        private const string GEOJSON_TEMPLATE_FILENAME = "model_grid.geojson";
+        private const string GEOJSON_TEMPLATE_FILENAME = "model_grid_wgs84.geojson";
 
         private static ObjectCache cache = MemoryCache.Default;
 

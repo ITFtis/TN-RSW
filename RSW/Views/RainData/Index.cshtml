@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="~/Content/prj/rthydro.css" />
 
 @Html.Partial("_ArcgisMapPartial")
+@Html.Partial("_ArcgisQpesums")
 
 <div id="arcgis_legend" style="position: absolute; top: 70px; left: 30px; width: 300px; max-height: 530px; overflow-y: hidden; transform: scale(0.9); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
 </div>
@@ -35,7 +36,7 @@
                     }
                 ]
             });
-            arcgis_map.map.add(mapserver);
+            arcgis_map.map.add(mapserver, 1);
             $.get('https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/legend').then(html => {
                 const dom = $.parseHTML(html);
                 const div = dom.find(x => x.tagName == 'DIV' && x.className == 'rbody');
@@ -48,5 +49,14 @@
         }
     }
 
-    $(document).ready(add_layer);
+    $(document).ready(function () {
+        add_layer();
+        qpesum_forecast_60m();
+    });
 </script>
+<div style="position: absolute; top: 600px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+    <h5>預報資料類型：</h5>
+    <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
+    <h5>預報資料時間：</h5>
+    <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
+</div>

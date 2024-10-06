@@ -1,9 +1,10 @@
 ﻿<!-- use arcgis js sdk -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <div class="tools-group-panel" id="arcgis-mapcontrol" style="position: absolute; top: 120px; right: 30px;"></div>
-
 <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
 <script src="https://js.arcgis.com/4.30/"></script>
-<script>const arcgis_map = {
+<script>
+    const arcgis_map = {
         basemap_selections: {},
     };
     $(document).ready(function () {
@@ -30,7 +31,8 @@
             }
         });
     });</script>
-<script>function custom_arcgis_ui(i = 0) {
+<script>
+    function custom_arcgis_ui(i = 0) {
         const zoom_control = $(".esri-component.esri-zoom.esri-widget");
         if (zoom_control.length) {
             zoom_control.appendTo("#arcgis-mapcontrol");
@@ -129,7 +131,7 @@
         });
 
         $("#map").css("height", "calc(100% - 50px)");
-  
+
         const view = new MapView({
             container: "map",
 
