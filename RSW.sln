@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32319.34
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34031.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSW", "RSW\RSW.csproj", "{E859CBC2-9E54-4993-8ED3-9D5D0CA2594A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dou", "..\..\Dou\Dou.csproj", "{2536A26B-AE38-4A30-873F-71D7785ABB81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DouHelper", "..\..\DouCore\Lib\DouHelper\DouHelper.csproj", "{7261B7E6-259F-468D-A1E5-68B411C191C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CWB_NCKU_Data", "CWB_NCKU_Data\CWB_NCKU_Data.csproj", "{DB62729B-01F9-4EA7-9553-CED8AF677FD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{7261B7E6-259F-468D-A1E5-68B411C191C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7261B7E6-259F-468D-A1E5-68B411C191C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7261B7E6-259F-468D-A1E5-68B411C191C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB62729B-01F9-4EA7-9553-CED8AF677FD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB62729B-01F9-4EA7-9553-CED8AF677FD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB62729B-01F9-4EA7-9553-CED8AF677FD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB62729B-01F9-4EA7-9553-CED8AF677FD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

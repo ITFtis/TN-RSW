@@ -1,0 +1,1 @@
+﻿To make Log folder exists in git
