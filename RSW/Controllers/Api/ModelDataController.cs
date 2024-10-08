@@ -121,6 +121,7 @@ namespace RSW.Controllers.Api
         }
 
         [HttpGet]
+        [Route("Data/TO_NCKU/waterlevel/{time}.LEVEL.TXT")]
         [Route("api/model/input/waterlevel/{time}")]
         public IHttpActionResult GetNCKUWaterLevel(string time)
         {
@@ -225,7 +226,7 @@ namespace RSW.Controllers.Api
                         return StringContentWithMimeType(data, mimetype);
                     }
                 }
-                return null;
+                return NotFound();
             }
         }  
 
@@ -302,7 +303,7 @@ namespace RSW.Controllers.Api
                         return StringContentWithMimeType(jobj.ToString(), mimetype);
                     }
                 }
-                return null;
+                return NotFound();
             }
         }
     }
