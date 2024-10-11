@@ -96,7 +96,7 @@ namespace CWB_NCKU_Data.Services
                                 {
                                     logger.Info($"水位計 {w_dev.stt_name} ({w_dev.dev_id}/{w_dev.stt_no}) 觸發 {alarm_type}, 推估水位： {wl}, 警戒值 {alarm_level}");
 
-                                    string message = $"[{DateTime.Now.ToShortTimeString()}] {COUNTY[w_dev.county_code]} ({w_dev.stt_name}) 已達一級警戒標準，預估水位為 {wl.ToString("0.##")} mm，請注意防範";
+                                    string message = $"[{DateTime.Now.ToShortTimeString()}] {COUNTY[w_dev.county_code]} ({w_dev.stt_name}) 已達 {alarm_type} 標準，預估水位為 {wl.ToString("0.##")} mm，請注意防範";
                                     string push_result = line_service.Push(message);
                                     WaterLevelPredictionAlarm alarm = new WaterLevelPredictionAlarm
                                     {
