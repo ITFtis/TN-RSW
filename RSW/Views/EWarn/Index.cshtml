@@ -6,7 +6,70 @@
 @Html.Partial("_ArcgisQpesums")
 
 <script>
-    $(document).ready(qpesum_forecast_60m);</script>
+    function ShowAlarm() {
+        $.post('@Url.Action("AlarmData")').then(response => {
+            arcgis_map.view.graphics.removeAll();
+            $("#stt-stations label").css("border", "none").css("color", "").css("background", "none");
+            var alarm_displayed = [];
+            for (let alarm of response) {
+                if (alarm_displayed.indexOf(alarm.stt_no) >= 0) continue;
+                alarm_displayed.push(alarm.stt_no);
+                console.log(alarm.stt_no);
+                var label = $("#stt-" + alarm.stt_no);
+                var text_border = "";
+                switch (alarm.alarm_type) {
+                    case "一級警戒":
+                        label.css("background", "red").css("color", "white");
+                        text_border = "red";
+                        break;
+                    case "二級警戒":
+                        label.css("background", "orange");
+                        text_border = "orange";
+                        break;
+                    case "三級警戒":
+                        label.css("background", "yellow");
+                        text_border = "yellow";
+                        break;
+                }
+                var newPoint = {
+                    type: "grapchic",
+                    geometry: {
+                        type: "point",
+                        longitude: alarm.lon,
+                        latitude: alarm.lat
+                    },
+                    symbol: {
+                        type: "text", // autocasts as new TextSymbol()
+                        backgroundColor: "rgba(255,255,255,0.8)",
+                        borderLineColor: text_border,
+                        borderLineSize: 2,
+                        lineWidth: 90,
+                        color: "#7A003C",
+                        text: alarm.alarm_message, // esri-icon-map-pin
+                        font: {
+                            // autocasts as new Font()
+                            size: 11,
+                            family: "Arial"
+                        }
+                    }
+                };
+                arcgis_map.view.graphics.add(newPoint);
+                label.off("click").on("click", function () {
+                    arcgis_map.view.goTo({
+                        center: [alarm.lon, alarm.lat],
+                        scale: 5000
+                    });
+                });
+                label.trigger("click");
+            }
+        });
+    }
+    $(document).ready(function () {
+        qpesum_forecast_60m();
+        setTimeout(ShowAlarm, 5000);
+        setInterval(ShowAlarm, 30000);
+    });
+</script>
 <div style="position: absolute; top: 70px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
     <h5>預報資料類型：</h5>
     <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
@@ -16,10 +79,10 @@
 <div style="position: absolute; top: 280px; left: 30px; width: 270px; height: calc(100vh - 520px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
     <h5>雨量預報預警水位站：</h5>
     <hr />
-    <div id="time-selections">
+    <div id="stt-stations">
         @foreach (var s in ViewBag.stations)
         {
-        <label title="公式：y = @(s.predict_mx.ToString().TrimEnd('0')) * 預報雨量 + @(s.predict_dy.ToString().TrimEnd('0'))">
+        <label id="stt-@(s.stt_no)" title="公式：y = @(s.predict_mx.ToString().TrimEnd('0')) * 預報雨量 + @(s.predict_dy.ToString().TrimEnd('0'))">
             @s.stt_name (@(s.stt_no))
         </label>
         }

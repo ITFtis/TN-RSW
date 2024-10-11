@@ -220,6 +220,7 @@
     <Compile Include="Models\Data\v_RealTimeReliable_Day.cs" />
     <Compile Include="Models\Data\v_RealTimeReliable_Month.cs" />
     <Compile Include="Models\Data\WaterLevelPrediction.cs" />
+    <Compile Include="Models\Data\WaterLevelPredictionAlarm.cs" />
     <Compile Include="Models\DouModelContextExt.cs" />
     <Compile Include="Models\Manager\Role.cs" />
     <Compile Include="Models\Manager\User.cs" />

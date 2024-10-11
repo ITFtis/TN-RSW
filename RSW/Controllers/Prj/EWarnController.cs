@@ -29,5 +29,14 @@ namespace RSW.Controllers.Prj
         {
             return View();
         }
+
+        public ActionResult AlarmData()
+        {
+            List<WaterLevelPredictionAlarm> alarmIn24H = DataService.GetData<WaterLevelPredictionAlarm>(
+                DataService.DB_DOU,
+                "SELECT * FROM WaterLevelPredictionAlarm WHERE AlarmDateTime >=  DATEADD(day, -1, GETDATE()) ORDER BY AlarmDateTime DESC")
+                .ToList();
+            return Json(alarmIn24H);
+        }
     }
 }
