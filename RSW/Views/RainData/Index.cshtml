@@ -5,11 +5,9 @@
 @Html.Partial("_ArcgisMapPartial")
 @Html.Partial("_ArcgisQpesums")
 
-<div id="arcgis_legend" style="position: absolute; top: 70px; left: 30px; width: 300px; max-height: 530px; overflow-y: hidden; transform: scale(0.9); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-</div>
-
 <script>
     const MAP_SERVER = 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer';
+    const LAYER_ID = "PIPE_LAYER";
     function switch_rain_data() {
       const h = $("#select_rain_data").val() * 1;
       switch (h) {
@@ -53,7 +51,13 @@
             setTimeout(add_layer, 1000);
             return;
         }
-        const mapserver = arcgis_map.createMapImageLayer({
+        const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
+        if (old_layer) {
+            arcgis_map.map.remove(old_layer);
+        }
+
+        const mapserver_layer = arcgis_map.createMapImageLayer({
+            id: LAYER_ID,
             url: MAP_SERVER,
             sublayers: [
                 {
@@ -78,14 +82,33 @@
                 }
             ]
         });
-        arcgis_map.map.add(mapserver, 2);
+        arcgis_map.map.add(mapserver_layer, 2);
         $.get(MAP_SERVER + '/legend').then(html => {
             const dom = $.parseHTML(html);
             const div = dom.find(x => x.tagName == 'DIV' && x.className == 'rbody');
+            const to_remove = $(div).find(`td:contains("all other values")`).parents("tr");
+            let legend_html = div.outerHTML;
+            if (to_remove && to_remove[0]) {
+                legend_html = legend_html.replace(to_remove[0].outerHTML, "");
+            }
             $("#arcgis_legend").html(
-                div.outerHTML
+                `<h5><input type="checkbox" checked onclick="toggle_pipe()" />顯示下水道管道</h5>` +
+                legend_html
             );
         });
+    }
+
+    function toggle_pipe(show) {
+        const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
+        if (!old_layer) return;
+        if (show === true) {
+            old_layer.visible = true;
+        } else if (show === false) {
+            old_layer.visible = false;
+        } else {
+            old_layer.visible = !old_layer.visible;
+        }
+
     }
 
     $(document).ready(function () {
@@ -93,23 +116,27 @@
         qpesum_forecast_60m();
     });
 </script>
-<div style="position: absolute; top: 570px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-    <h5>雨量資料類型：</h5>
-    <select id="select_rain_data" style="color: rgb(14 8 100); font-weight: 800;" onchange="switch_rain_data()">
-        <option value="0">QPESUMS一小時觀測雨量</option>
-        <option selected value="1">QPESUMS第一小時累積雨量</option>
-        <option value="2">QPESUMS第二小時累積雨量</option>
-        <option value="3">QPESUMS第三小時累積雨量</option>
-        <option value="4">WRF第四小時累積雨量</option>
-        <option value="5">WRF第五小時累積雨量</option>
-        <option value="6">WRF第六小時累積雨量</option>
-        <option value="7">WRF第七小時累積雨量</option>
-        <option value="8">WRF第八小時累積雨量</option>
-        <option value="9">WRF第九小時累積雨量</option>
-        <option value="10">WRF第10小時累積雨量</option>
-        <option value="11">WRF第11小時累積雨量</option>
-        <option value="12">WRF第12小時累積雨量</option>
-    </select>
-    <h5>雨量資料時間：</h5>
-    <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
+<div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
+    <div id="arcgis_legend" style="width: 300px; height: 535px; margin-bottom: -20px; overflow-y: hidden; transform: scale(0.9); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">        
+    </div>
+    <div style="width: 270px; height: 140px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+        <h5><input type="checkbox" checked onclick="qpesums.toggle_qpesums()"/>雨量資料類型：</h5>
+        <select id="select_rain_data" style="color: rgb(14 8 100); font-weight: 800;" onchange="switch_rain_data()">
+            <option value="0">QPESUMS一小時觀測雨量</option>
+            <option selected value="1">QPESUMS第一小時累積雨量</option>
+            <option value="2">QPESUMS第二小時累積雨量</option>
+            <option value="3">QPESUMS第三小時累積雨量</option>
+            <option value="4">WRF第四小時累積雨量</option>
+            <option value="5">WRF第五小時累積雨量</option>
+            <option value="6">WRF第六小時累積雨量</option>
+            <option value="7">WRF第七小時累積雨量</option>
+            <option value="8">WRF第八小時累積雨量</option>
+            <option value="9">WRF第九小時累積雨量</option>
+            <option value="10">WRF第10小時累積雨量</option>
+            <option value="11">WRF第11小時累積雨量</option>
+            <option value="12">WRF第12小時累積雨量</option>
+        </select>
+        <h5>雨量資料時間：</h5>
+        <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
+    </div>
 </div>

@@ -27,6 +27,17 @@
         };
         return f;
     }
+    qpesums.toggle_qpesums = function (show) {
+        const old_layer = arcgis_map.map.findLayerById(qpesums.LAYER_ID);
+        if (!old_layer) return;
+        if (show === true) {
+            old_layer.visible = true;
+        } else if (show === false) {
+            old_layer.visible = false;
+        } else {
+            old_layer.visible = !old_layer.visible;
+        }
+    }
     qpesums.update_qpesums_layer = function (list, popupMsg) {
         const old_layer = arcgis_map.map.findLayerById(qpesums.LAYER_ID);
         const layer = arcgis_map.createFeatureLayer({

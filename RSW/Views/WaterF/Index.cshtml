@@ -89,28 +89,29 @@
         getModelResultList();
     });
 </script>
-<div style="position: absolute; bottom: 240px; left: 30px; width: 200px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-    <h5>雨量資料類型：</h5>
-    <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時預報雨量</h6>
-    <h5>資料時間：</h5>
-    <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
-</div>
-<div style="position: absolute; top: 80px; left: 30px; width: 200px; height: calc(100vh - 540px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 12px; cursor: pointer">
-    <h5>淹水模擬時間：</h5>
-    <h5 id="model-time"></h5>
-    <hr />
-    <div id="hour-selections">
-        @for (var i = 0; i <= 12; i++)
-        {
+<div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
+    <div style="margin-bottom: 20px; margin-right: 20px; width: 200px; height: 100%; max-height: 420px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 12px; cursor: pointer">
+        <h5>淹水模擬時間：</h5>
+        <h5 id="model-time"></h5>
+        <hr />
+        <div id="hour-selections">
+            @for (var i = 0; i <= 12; i++)
+            {
 <span style="padding: 1px; font-size: 12px" id="m-hour-@i" onclick="showModelResult(0, @i)">+@i</span> if (i == 6)
-                {
-                    <br />
-                }
-            }
+{
+<br />          }
+}
+        </div>
+        <hr />
+        <h5>其他模式時間：</h5>
+        <hr />
+        <div id="time-selections">
+        </div>
     </div>
-    <hr />
-    <h5>其他模式時間：</h5>
-    <hr />
-    <div id="time-selections">
+    <div style="width: 200px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+        <h5><input type="checkbox" checked onclick="qpesums.toggle_qpesums()" />雨量資料類型：</h5>
+        <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時預報雨量</h6>
+        <h5>資料時間：</h5>
+        <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
     </div>
 </div>

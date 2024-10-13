@@ -42,6 +42,7 @@
         const zoom_control = $(".esri-component.esri-zoom.esri-widget");
         if (zoom_control.length) {
             zoom_control.appendTo("#arcgis-mapcontrol");
+            $(".esri-ui").css("z-index", 1);
             setTimeout(() => arcgis_map.view.goTo(arcgis_map.fullextent), 300);
         } else {
             if (i < 30) {
@@ -160,7 +161,7 @@
         arcgis_map.map = map;
         arcgis_map.view = view;
         arcgis_map.createFeatureLayer = (p) => new FeatureLayer(p);
-        arcgis_map.createGraphicLayer = (p) => new GraphicLayer(p);
+        arcgis_map.createGraphicsLayer = (p) => new GraphicsLayer(p);
         arcgis_map.createMapImageLayer = (p) => new MapImageLayer(p);
         arcgis_map.createGeoJSONLayer = (p) => new GeoJSONLayer(p);
         arcgis_map.createFeature = (p) => new Feature(p);

@@ -6,8 +6,16 @@
 @Html.Partial("_ArcgisQpesums")
 
 <script>
+    const TEXT_GRAPHICS_LAYER = "TEXT_GRAPHICS_LAYER";
     function ShowAlarm() {
         $.post('@Url.Action("AlarmData")').then(response => {
+            let layer = arcgis_map.map.findLayerById(TEXT_GRAPHICS_LAYER);
+            if (layer) {
+                layer.graphics.removeAll();
+            } else {
+                layer = arcgis_map.createGraphicsLayer({ id: TEXT_GRAPHICS_LAYER, minScale: 10000 });
+                arcgis_map.map.add(layer, 0);
+            }
             arcgis_map.view.graphics.removeAll();
             $("#stt-stations label").css("border", "none").css("color", "").css("background", "none");
             var alarm_displayed = [];
@@ -16,19 +24,19 @@
                 alarm_displayed.push(alarm.stt_no);
                 console.log(alarm.stt_no);
                 var label = $("#stt-" + alarm.stt_no);
-                var text_border = "";
+                var alarm_type_color = "";
                 switch (alarm.alarm_type) {
                     case "一級警戒":
                         label.css("background", "red").css("color", "white");
-                        text_border = "red";
+                        alarm_type_color = "red";
                         break;
                     case "二級警戒":
                         label.css("background", "orange");
-                        text_border = "orange";
+                        alarm_type_color = "orange";
                         break;
                     case "三級警戒":
                         label.css("background", "yellow");
-                        text_border = "yellow";
+                        alarm_type_color = "yellow";
                         break;
                 }
                 var newPoint = {
@@ -37,14 +45,26 @@
                         type: "point",
                         longitude: alarm.lon,
                         latitude: alarm.lat
-                    },
+                    }
+                };
+                arcgis_map.view.graphics.add({
+                    ...newPoint,
+                    symbol: {
+                        type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                        style: "circle",
+                        color: alarm_type_color,
+                        size: "18px",                      }
+                })
+                layer.graphics.add({
+                    ...newPoint,
                     symbol: {
                         type: "text", // autocasts as new TextSymbol()
                         backgroundColor: "rgba(255,255,255,0.8)",
-                        borderLineColor: text_border,
+                        borderLineColor: alarm_type_color,
                         borderLineSize: 2,
                         lineWidth: 90,
                         color: "#7A003C",
+                        yoffset: -20, 
                         text: alarm.alarm_message, // esri-icon-map-pin
                         font: {
                             // autocasts as new Font()
@@ -52,8 +72,7 @@
                             family: "Arial"
                         }
                     }
-                };
-                arcgis_map.view.graphics.add(newPoint);
+                });
                 label.off("click").on("click", function () {
                     arcgis_map.view.goTo({
                         center: [alarm.lon, alarm.lat],
@@ -70,21 +89,23 @@
         setInterval(ShowAlarm, 30000);
     });
 </script>
-<div style="position: absolute; top: 70px; left: 30px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-    <h5>預報資料類型：</h5>
-    <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
-    <h5>預報資料時間：</h5>
-    <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
-</div>
-<div style="position: absolute; top: 280px; left: 30px; width: 270px; height: calc(100vh - 520px); background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
-    <h5>雨量預報預警水位站：</h5>
-    <hr />
-    <div id="stt-stations">
-        @foreach (var s in ViewBag.stations)
-        {
-        <label id="stt-@(s.stt_no)" title="公式：y = @(s.predict_mx.ToString().TrimEnd('0')) * 預報雨量 + @(s.predict_dy.ToString().TrimEnd('0'))">
-            @s.stt_name (@(s.stt_no))
-        </label>
-        }
+<div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
+    <div style="margin-bottom: 30px; margin-right: 20px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+        <h5>預報資料類型：</h5>
+        <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
+        <h5>預報資料時間：</h5>
+        <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
+    </div>
+    <div style="width: 270px; max-height: 300px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
+        <h5>雨量預報預警水位站：</h5>
+        <hr />
+        <div id="stt-stations">
+            @foreach (var s in ViewBag.stations)
+            {
+                <label id="stt-@(s.stt_no)" title="公式：y = @(s.predict_mx.ToString().TrimEnd('0')) * 預報雨量 + @(s.predict_dy.ToString().TrimEnd('0'))">
+                    @s.stt_name (@(s.stt_no))
+                </label>
+            }
+        </div>
     </div>
 </div>
