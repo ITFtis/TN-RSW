@@ -36,6 +36,7 @@
                 var qpesum_time = `${t0.substring(0, 4)}-${t0.substring(4, 6)}-${t0.substring(6, 8)}T${t0.substring(9, 11)}:${t0.substring(11, 13)}`;
                 qpesum_forecast_60m(null, qpesum_time);
             }
+            $("#loading").show();
             $("#model-time").text(last_t0);
             $("#time-selections label").css("background", "");
             $("#hour-selections span").css("border", "");
@@ -79,6 +80,18 @@
                 }
             });
             arcgis_map.map.add(result_layer);
+            arcgis_map.view.whenLayerView(result_layer).then(lv => {
+                let check_ready = function () {
+                    if (lv.updating) {
+                        setTimeout(check_ready, 200);
+                    } else {
+                        $("#loading").hide();
+                    }
+                };
+                check_ready();
+            }).catch(function (error) {
+                $("#loading").hide();
+            });
         }
 
     }
