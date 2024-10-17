@@ -25,15 +25,13 @@ namespace CWB_NCKU_Data.Services
         {
             try
             {
-                // 檢查前一個時間點的資料, 10分鐘為單位
+                // 檢查前一個時間點的資料, 一小時為單位
                 var now = DateTime.Now;
-                var datetime_to_download = now
-                    .AddSeconds(-now.Second)
-                    .AddMinutes(-(now.Minute % 10));
+                var datetime_to_check = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
 
-                var url = string.Format(AppSettings.NCKU_Download_Url2, datetime_to_download);
-                byte[] data = DataService.DownloadData(url);
-                logger.Info("完成自 " + url + " 下載資料，檔案大小：" + data.Length);
+                //var url = string.Format(AppSettings.NCKU_Download_Url2, datetime_to_download);
+                //byte[] data = DataService.DownloadData(url);
+                //logger.Info("完成自 " + url + " 下載資料，檔案大小：" + data.Length);
 
                 // 假設是 
                 // {
@@ -43,19 +41,22 @@ namespace CWB_NCKU_Data.Services
                 //    ]
                 // }
                 //
-                var result = JObject.Parse(System.Text.Encoding.UTF8.GetString(data));
-                var list = result["data"].ToList();
+                var list = DataService.GetData<CWARainStPredict>(DataService.DB_DOU,
+                    "SELECT * FROM CWA_RainStPredict WHERE predict_datetime=@PredictDateTime", new SqlParameter[] {
+                        new SqlParameter("@PredictDateTime", datetime_to_check)});
                 foreach (var x in list)
                 {
-                    var rain_st = x["rain_st"].Value<string>();
-                    var input_x = x["precipitation_12hr"].Value<float>();
+                    var rain_st = x.rain_st_name;
+                    var input_x = x.acc12;
                     logger.Info("雨量站 " + rain_st + " 12小時預估累積雨量為: " + input_x);
+
+                    if (input_x < 0.001m) continue;
 
                     // 找出該雨量站對應的水位計公式
                     // 用 ToList() 全部載入記憶體
                     var preidction_data = DataService.GetData<WaterLevelPrediction>(
                         DataService.DB_DOU,
-                        "SELECT * FROM WaterLevelPrediction WHERE rain_st=@rain_st AND predict_mx IS NOT NULL AND predict_dy IS NOT NULL",
+                        "SELECT * FROM WaterLevelPrediction WHERE rain_st_name=@rain_st AND predict_mx IS NOT NULL AND predict_dy IS NOT NULL",
                         new SqlParameter[] { new SqlParameter("@rain_st", rain_st) }).ToList();
 
                     foreach (var w_dev in preidction_data)
@@ -94,14 +95,14 @@ namespace CWB_NCKU_Data.Services
                                 }
                                 if (alarm_type != null)
                                 {
-                                    logger.Info($"水位計 {w_dev.stt_name} ({w_dev.dev_id}/{w_dev.stt_no}) 觸發 {alarm_type}, 推估水位： {wl}, 警戒值 {alarm_level}");
+                                    logger.Info($"{rain_st} 12小時累積預報雨量為 {input_x}，水位計 {w_dev.stt_name} ({w_dev.dev_id}/{w_dev.stt_no}) 觸發 {alarm_type}, 推估水位： {wl}, 警戒值 {alarm_level}");
 
                                     string message = $"[{DateTime.Now.ToShortTimeString()}] {COUNTY[w_dev.county_code]} ({w_dev.stt_name}) 已達 {alarm_type} 標準，預估水位為 {wl.ToString("0.##")} mm，請注意防範";
                                     string push_result = line_service.Push(message);
                                     WaterLevelPredictionAlarm alarm = new WaterLevelPredictionAlarm
                                     {
                                         AlarmDateTime = DateTime.Now,
-                                        PredictDateTime = datetime_to_download,
+                                        PredictDateTime = datetime_to_check,
                                         dev_id = w_dev.dev_id,
                                         stt_no = w_dev.stt_no,
                                         stt_name = w_dev.stt_name,

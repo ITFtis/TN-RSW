@@ -12,7 +12,7 @@ namespace RSW.Models.Data
     [Table("[CWA_RainStPredict]")]
     public partial class CWARainStPredict
     {
-        public int id { get; set; }
+        public long id { get; set; }
 
         public DateTime PredictDateTime { get; set; }
 
