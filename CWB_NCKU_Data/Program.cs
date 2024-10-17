@@ -20,7 +20,7 @@ namespace CWB_NCKU_Data
             {
                 var start_time = DateTime.Now;
                 logger.Info("氣象署轉成大" + ": starting...");
-                var run = new CWB_NCKU_Data.Services.CWBInputProcess();
+                var run = new CWB_NCKU_Data.Services.CWAInputProcess();
                 var output = run.Execute();
                 logger.Info("氣象署轉成大" + ": 完成，資料檔案路徑: " + output);
 

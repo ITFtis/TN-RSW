@@ -75,10 +75,11 @@
     <Compile Include="Models\BasicSttCounty.cs" />
     <Compile Include="Models\BasicSttDev.cs" />
     <Compile Include="Models\WaterLevelPrediction.cs" />
+    <Compile Include="Models\CWARainStPredict.cs" />
     <Compile Include="Models\WaterLevelPredictionAlarm.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\CWBInputProcess.cs" />
+    <Compile Include="Services\CWAInputProcess.cs" />
     <Compile Include="Services\DataService.cs" />
     <Compile Include="Services\LineMessageService.cs" />
     <Compile Include="Services\NCKUResultProcess.cs" />
