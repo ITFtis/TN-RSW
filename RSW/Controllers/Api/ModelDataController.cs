@@ -286,9 +286,9 @@ namespace RSW.Controllers.Api
                             {
                                 try
                                 {
-                                    var parts = line.Split(null);
+                                    var parts = line.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
                                     var id = Convert.ToInt32(parts[0]);
-                                    var val = Convert.ToDecimal(parts[1]);
+                                    var val = Convert.ToDecimal(parts[2]);
                                     data.Add(id, val);
                                 }
                                 catch (Exception ignore)

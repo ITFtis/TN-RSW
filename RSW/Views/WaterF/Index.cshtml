@@ -3,11 +3,18 @@
 <link rel="stylesheet" href="~/Content/prj/rthydro.css" />
 @Html.Partial("_ArcgisMapPartial")
 @Html.Partial("_ArcgisQpesums")
-<div id="water-level-legend" style="position: absolute; bottom: 65px; right: 140px;padding: 0px; border: 3px solid rgba(255,255,255,0.4); ">
-    <img src='@Url.Content("~/Images/淹水深度圖例.png")' />
+<div id="water-level-legend" style="position: absolute; bottom: 65px; right: 140px;padding: 0px; border: 3px solid rgba(255,255,255,0.4); background: rgba(250,250,250,0.9) ">
 </div>
 <script>
     const LAYER_ID = 'E-WARN';
+    const MODEL_COLORSCALE = [
+        { value: 0, color: "rgba(0,0,0,0)" },
+        { value: 0.3, color: "rgba(50,50,144, 0.3)" },
+        { value: 0.5, color: "rgba(50,50,144, 0.5)" },
+        { value: 1, color: "rgba(50,50,144, 0.7)" },
+        { value: 2, color: "rgba(50,50,144, 0.9)" },
+        { value: 3, color: "rgba(50,50,144, 1)" }
+    ];
     var last_t0;
 
     function getModelResultList() {
@@ -24,6 +31,17 @@
                 }
             }
         });
+    }
+
+    function showModelResultLegend() {
+        $("#water-level-legend").html("<h6>淹水深度</h6>");
+        for (var s of MODEL_COLORSCALE) {
+            const c = s.color;
+            const v = s.value;
+            $("#water-level-legend").append(`<div style='width: 50px; height: 25px; border: 0.5px solid rgba(128,128,128,0.5);'><span style='display: inline-block; height: 100%; width: 100%; background-color: ${c}; '></span><span style='font-weight: 800; display: inline-block; margin-left: 2px; position: absolute; '>${v}</span></div>`);
+        }
+        $("#water-level-legend").append("<h6>單位：公尺</h6>")
+
     }
 
     function showModelResult(t0, h) {
@@ -50,16 +68,16 @@
                 id: LAYER_ID + '-OUTPUT', // url to the service
                 popupTemplate: {
                     overwriteActions: true,
-                    title: "淹水深度: {FIELD1} mm",
+                    title: "淹水深度: {FIELD1} 公尺",
                     content: "ID: {ID}"
                 },
                 renderer: {
                     type: "simple",
                     symbol: {
                         type: "simple-fill",
-                        color: [250, 250, 250],
+                        color: [250, 250, 250, 0],
                         outline: {
-                            color: [255, 128, 128, 0.5],
+                            color: [128, 128, 128, 0.05],
                             width: 0.5
                         }
                     },
@@ -67,14 +85,7 @@
                         {
                             type: "color",
                             field: "FIELD1",
-                            stops: [
-                                { value: 0, color: "#F0F0F0" },
-                                { value: 300, color: "#FFFF01" },
-                                { value: 500, color: "#B8B0FF" },
-                                { value: 1000, color: "#FFC242" },
-                                { value: 2000, color: "#4DE85C" },
-                                { value: 3000, color: "#343490" }
-                            ]
+                            stops: MODEL_COLORSCALE
                         }
                     ]
                 }
@@ -99,6 +110,7 @@
 
 
     $(document).ready(function () {
+        showModelResultLegend();
         getModelResultList();
     });
 </script>
@@ -110,10 +122,10 @@
         <div id="hour-selections">
             @for (var i = 0; i <= 12; i++)
             {
-<span style="padding: 1px; font-size: 12px" id="m-hour-@i" onclick="showModelResult(0, @i)">+@i</span> if (i == 6)
-{
-<br />          }
-}
+                <span style="padding: 1px; font-size: 12px" id="m-hour-@i" onclick="showModelResult(0, @i)">+@i</span> if (i == 6)
+                {
+                    <br />          }
+            }
         </div>
         <hr />
         <h5>其他模式時間：</h5>
