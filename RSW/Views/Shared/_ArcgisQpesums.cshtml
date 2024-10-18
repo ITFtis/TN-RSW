@@ -111,6 +111,25 @@
         if (old_layer) arcgis_map.map.remove(old_layer);
         arcgis_map.map.add(layer, 0);
     }
+    
+    function manysplendid_csv_data(t0,h) {
+        $("#loading").show();
+        const data_url = `${app.siteRoot}api/model/input/grid_rain/${t0}/${h}`;
+        $.get(data_url).then(data => {
+            const content = data.split("\n");
+            let ptr = 0;
+            const list = [];
+            for (var r of content) {
+                ptr++;
+                const parts = r.split(',');
+                const f = qpesums.create_grid_feature(ptr, parts[0] * 1.0, parts[1]* 1.0, 0.0125, 0.0125, parts[2] * 1.0);
+                list.push(f);                 
+            }
+            qpesums.update_qpesums_layer(list, "1小時預報雨量: {v} mm");
+            $("#qpesum-datetime").text(t0);
+            $("#loading").hide();
+        }).fail(()=>$("#loading").hide());
+    }
     function parse_opendata_json(data) {
         const list = [];
         const meta = data.cwaopendata.dataset.datasetInfo;

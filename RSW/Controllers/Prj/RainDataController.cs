@@ -1,6 +1,8 @@
 ﻿using Antlr.Runtime.Misc;
 using Dou.Misc.Attr;
 using RSW.Controllers.Comm;
+using RSW.Models.Data;
+using RSW.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,12 @@ namespace RSW.Controllers.Prj
         public ActionResult Index()
         {
             return View();
+        }
+
+        public ActionResult Stations()
+        {
+            var data = DataService.GetData<BasicStt>(DataService.DB_TN, "SELECT * FROM [BasicStt]");
+            return Json(data.Select(x=>new { x.stt_name, x.addr, x.lon, x.lat }).ToList());
         }
     }
 }

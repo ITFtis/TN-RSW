@@ -198,7 +198,7 @@ namespace CWB_NCKU_Data.Services
 
                 // 轉存至網站 Data/TO_NCKU 路徑
                 Directory.CreateDirectory(AppSettings.TO_NCKU_Path);
-                string output = Path.Combine(AppSettings.TO_NCKU_Path, "GRID_RAIN_" + datetime_to_download.ToString("yyyyMMddHH") + ".zip");
+                string output = Path.Combine(AppSettings.TO_NCKU_Path, "GRID_RAIN_" + datetime_to_download.ToString("yyyyMMddHH") + "00.zip");
                 File.Copy(tempRepacked, output, true);
 
                 // https://wrbweb.tainan.gov.tw/TainanApi/Rain/Stations 

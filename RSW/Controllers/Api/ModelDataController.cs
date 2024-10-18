@@ -166,7 +166,7 @@ namespace RSW.Controllers.Api
                     zips.Add($"{parts[parts.Length - 2]},{Url.Content(INPUT_DATA_PATH)}/GRID_RAIN_{parts[parts.Length - 2]}.ZIP");
                 }
             }
-            return zips;
+            return zips.OrderByDescending(x=>x);
         }
 
         [HttpGet]
@@ -244,7 +244,7 @@ namespace RSW.Controllers.Api
                     zips.Add($"{parts[parts.Length - 4]}.{parts[parts.Length - 3]}");
                 }
             }
-            return zips;
+            return zips.OrderByDescending(x=>x);
         }
 
 

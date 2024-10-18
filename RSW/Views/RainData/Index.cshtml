@@ -8,6 +8,7 @@
 <script>
     const MAP_SERVER = 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer';
     const LAYER_ID = "PIPE_LAYER";
+    const LAYER_ID2 = "STATION_LAYER";
     function switch_rain_data() {
       const h = $("#select_rain_data").val() * 1;
       switch (h) {
@@ -25,30 +26,88 @@
           if (response && response[0]) {
             $("#loading").show();
             const t0 = response[0].split(',')[0];
-            const data_url = `${app.siteRoot}api/model/input/grid_rain/${t0}/${h}`;
-            $.get(data_url).then(data => {
-                const content = data.split("\n");
-                let ptr = 0;
-                const list = [];
-                for (var r of content) {
-                   ptr++;
-                   const parts = r.split(',');
-                   const f = qpesums.create_grid_feature(ptr, parts[0] * 1.0, parts[1]* 1.0, 0.0125, 0.0125, parts[2] * 1.0);
-                   list.push(f);                 
-                }
-                qpesums.update_qpesums_layer(list, "1小時預報雨量: {v} mm");
-                $("#qpesum-datetime").text(t0);
-                $("#loading").hide();
-            }).fail(()=>$("#loading").hide());
+            manysplendid_csv_data(t0, h);
           } else {
             alert("無預報雨量資料！");
           }
        });
     }
-    function add_layer() {
+    function add_station_layer() {
+        if (!arcgis_map.ready) {
+            setTimeout(add_station_layer, 1000);
+            return;
+        }
+        $.post('@Url.Action("Stations")').then(response => {
+            const old_layer = arcgis_map.map.findLayerById(LAYER_ID2);
+            if (old_layer) {
+                arcgis_map.map.remove(old_layer);
+            }
+            const renderer = {
+                type: "simple",
+                symbol: {
+                    type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+                    url: '@Url.Content("~/images/pin/下水道_正常.png")',
+                    width: "32px",
+                    height: "32px"
+                }
+            };
+            const list = [];
+            let ptr = 0;
+            for (var row of response) {
+                const lon = row.lon * 1.0;
+                const lat = row.lat * 1.0;
+                ptr++;
+                list.push({
+                    geometry: {
+                        type: "point",
+                        x: lon,
+                        y: lat,
+                    },
+                    attributes: {
+                        OBJECTID: ptr,
+                        name: row.stt_name,
+                        addr: row.addr,
+                        lon,
+                        lat
+                    }
+                });
+            }
+            const layer = arcgis_map.createFeatureLayer({
+                id: LAYER_ID2,
+                source: list,  // array of graphics objects
+                objectIdField: "OBJECTID",
+                fields: [{
+                    name: "OBJECTID",
+                    type: "oid"
+                }, {
+                    name: "name",
+                    type: "string"
+                }, {
+                    name: "addr",
+                    type: "string"
+                }, {
+                    name: "lat",
+                    type: "double"
+                },
+                {
+                    name: "lon",
+                    type: "double"
+                }],
+                popupTemplate: {
+                    overwriteActions: true,
+                    title: "雨水下水道監測站",
+                    content: "站名: {name}<br/>座標: {lon},{lat}<br/>地址: {addr}"
+                },
+                renderer,
+                opacity: 1,
+            });
+            arcgis_map.map.add(layer);
+        });
+    }
+    function add_pipe_layer() {
         if (!arcgis_map.ready)
         {
-            setTimeout(add_layer, 1000);
+            setTimeout(add_pipe_layer, 1000);
             return;
         }
         const old_layer = arcgis_map.map.findLayerById(LAYER_ID);
@@ -112,7 +171,8 @@
     }
 
     $(document).ready(function () {
-        add_layer();
+        add_pipe_layer();
+        add_station_layer();
         qpesum_forecast_60m();
     });
 </script>
