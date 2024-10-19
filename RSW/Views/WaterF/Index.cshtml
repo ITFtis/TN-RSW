@@ -17,6 +17,121 @@
     ];
     var last_t0;
 
+    function hide_chart_popup() {
+        $("#chart_popup").hide();
+    }
+
+    function getProfileData() {
+        if (!arcgis_map.createFeatureLayer) {
+            console.log('Waiting for arcgis ready');
+            setTimeout(function () { getProfileData(); }, 1000);
+        } else {
+
+            var f = arcgis_map.createFeatureLayer({
+                url: "https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/1"
+            });
+            $.get('@Url.Content("/Data/NCKU_OUTPUT/profile.json")').then(json => {
+                const old_result_layer = arcgis_map.map.findLayerById(LAYER_ID + '-PROFILE');
+                if (old_result_layer) arcgis_map.map.remove(old_result_layer);
+                const list = [];
+                const xAxis = {
+                    categories: []
+                };
+                const series = [
+                    { name: "Bottom", data: [] },
+                    { name: "Top", data: [] },
+                    { name: "WL", data: [] },
+                ];
+                const promises = [];
+                let ptr = 0;
+                for (var p of Object.values(json)) {
+                    ptr++;
+                    const fid_list = p.node.map(x => x.fid);
+                    const q = f.createQuery();
+                    q.where = "fid in (" + fid_list.join(',') + ")";
+                    q.returnGeometry = false;
+                    q.outFields = ["fid", "lon", "lat", "BaseHeight", "HoleDepth"];
+                    promises.push(
+                        f.queryFeatures(q).then(result => {
+                            let paths = [
+                                fid_list.map(i => {
+                                    const y = result.features.find(x => x.attributes.FID == i);
+                                    if (y.attributes.BaseHeight && y.attributes.HoleDepth) {
+                                        const b = y.attributes.BaseHeight - y.attributes.HoleDepth;
+                                        const wl = Math.random() * 0.8;
+                                        xAxis.categories.push(i);
+                                        series[0].data.push(b);
+                                        series[2].data.push(wl);
+                                        series[1].data.push(y.attributes.BaseHeight);
+                                    }
+                                    return [y.attributes.lon, y.attributes.lat];
+                                })
+                            ];
+                            list.push({
+                                geometry: {
+                                    type: "polyline",
+                                    paths,
+                                },
+                                attributes: {
+                                    OBJECTID: ptr,
+                                    fid: result.features.map(r => r.attributes.FID).join(",")
+                                }
+                            });
+                        })
+                    );
+                }
+                Promise.all(promises).then(() => {
+                    const layer = arcgis_map.createFeatureLayer({
+                        id: LAYER_ID + "-PROFILE",
+                        source: list,
+                        objectIdField: "OBJECTID",
+                        fields: [{
+                            name: "OBJECTID",
+                            type: "oid"
+                        }, {
+                            name: "fid",
+                            type: "string"
+                            }],
+                        renderer: {
+                            type: "simple",
+                            symbol: {
+                                type: "simple-line",
+                                width: 3,
+                                color: "#C04020",
+                                style: "short-dash-dot"
+                            }
+                        }
+                    });
+                    arcgis_map.map.add(layer);
+                    Highcharts.chart("chart1", {
+                        chart: {
+                            type: "column"
+                        },
+                        title: { text: "下水道水位變化剖面" },
+                        subtitle: { text: "時間: 21:40" },                      
+                        legend: { enabled: false },
+                        plotOptions: {
+                            column: {
+                                pointPadding: 0.2,
+                                borderWidth: 0,
+                                grouping: false
+                            }
+                        },
+                        xAxis,
+                        yAxis: {
+                            title: {
+                                text: '高程 (M)'
+                            }
+                        },
+                        colors: ["#4080ff", "#c0c0c0", "#4080ff"],
+                        series
+                    })
+                    $("#chart_popup").show();
+                });
+            });
+        }
+    }
+
     function getModelResultList() {
         var url = app.siteRoot + 'api/model/result/list';
         $.get(url).then(response => {
@@ -41,7 +156,25 @@
             $("#water-level-legend").append(`<div style='width: 50px; height: 25px; border: 0.5px solid rgba(128,128,128,0.5);'><span style='display: inline-block; height: 100%; width: 100%; background-color: ${c}; '></span><span style='font-weight: 800; display: inline-block; margin-left: 2px; position: absolute; '>${v}</span></div>`);
         }
         $("#water-level-legend").append("<h6>單位：公尺</h6>")
+    }
 
+    function toggle_modelresult(show) {
+        let old_layer = arcgis_map.map.findLayerById(LAYER_ID + '-OUTPUT');
+        if (show === true) {
+            old_layer.visible = true;
+        } else if (show === false) {
+            old_layer.visible = false;
+        } else {
+            old_layer.visible = !old_layer.visible;
+        }
+        old_layer = arcgis_map.map.findLayerById(LAYER_ID + '-PROFILE');
+        if (show === true) {
+            old_layer.visible = true;
+        } else if (show === false) {
+            old_layer.visible = false;
+        } else {
+            old_layer.visible = !old_layer.visible;
+        }
     }
 
     function showModelResult(t0, h) {
@@ -107,24 +240,31 @@
 
     }
 
-
-
     $(document).ready(function () {
         showModelResultLegend();
         getModelResultList();
+        getProfileData();
     });
 </script>
+<div id="chart_popup" style="position:absolute; height: 450px; width: 60vw; left: 20vw; top: 150px;
+    outline: 2px double orange;
+    background: rgba(250,250,250,0.9); display: none;">
+    <div id="close" style="position:absolute; top: 2px; right: 5px; z-index: 1000;" onclick="hide_chart_popup()">&#x2612;</div>
+    <div id="chart1" style="height: 450px; width: 100%"></div>
+</div>
 <div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
     <div style="margin-bottom: 20px; margin-right: 20px; width: 200px; height: 100%; max-height: 420px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 12px; cursor: pointer">
-        <h5>淹水模擬時間：</h5>
+        <h5><input type="checkbox" checked onclick="toggle_modelresult()" />淹水模擬時間：</h5>
         <h5 id="model-time"></h5>
         <hr />
         <div id="hour-selections">
             @for (var i = 0; i <= 12; i++)
             {
-                <span style="padding: 1px; font-size: 12px" id="m-hour-@i" onclick="showModelResult(0, @i)">+@i</span> if (i == 6)
+                <span style="padding: 1px; font-size: 12px" id="m-hour-@i" onclick="showModelResult(0, @i)">+@i</span>
+                if (i == 6)
                 {
-                    <br />          }
+                    <br />
+                }
             }
         </div>
         <hr />
