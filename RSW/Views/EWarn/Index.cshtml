@@ -84,18 +84,18 @@
         });
     }
     $(document).ready(function () {
-        qpesum_forecast_60m();
+//        qpesum_forecast_60m();
         setTimeout(ShowAlarm, 5000);
         setInterval(ShowAlarm, 30000);
     });
 </script>
 <div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
-    <div style="margin-bottom: 30px; margin-right: 20px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+    @*<div style="margin-bottom: 30px; margin-right: 20px; width: 270px; height: 180px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
         <h5>預報資料類型：</h5>
         <h6 style="color: rgb(14 8 100); font-weight: 800;">QPESUMS一小時累積雨量</h6>
         <h5>預報資料時間：</h5>
         <h6 id="qpesum-datetime" style="color: rgb(14 8 100); font-weight: 800;"></h6>
-    </div>
+    </div>*@
     <div style="width: 270px; max-height: 300px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 20px;">
         <h5>雨量預報預警水位站：</h5>
         <hr />
