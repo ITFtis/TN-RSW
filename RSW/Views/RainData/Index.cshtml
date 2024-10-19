@@ -32,6 +32,156 @@
           }
        });
     }
+
+    function hide_chart_popup() {
+        $("#chart_popup").hide();
+    }
+
+    function toggle_stationlayer(show) {
+        const old_layer = arcgis_map.map.findLayerById(LAYER_ID2);
+        if (show === true) {
+            old_layer.visible = true;
+        } else if (show === false) {
+            old_layer.visible = false;
+        } else {
+            old_layer.visible = !old_layer.visible;
+        }
+    }
+
+    function show_timeseries(feature) {
+        
+        const ts = new Date();
+        const now = ts.getTime() - ts.getTimezoneOffset() * 60 * 1000;
+        const xAxis = {
+            type: 'datetime',
+            plotLines: [{
+                color: '#4840d6',
+                width: 2,
+                value: now,
+                zIndex: 2,
+                dashStyle: 'Dash',
+                label: {
+                    text: '目前時間',
+                    rotation: 0,
+                    y: 20,
+                    style: {
+                        color: '#333333'
+                    }
+                }
+            }]
+        };
+
+        console.log(feature);
+        const rain_data = [];
+        const wl_data = [];
+        for (let h = -12; h <= 12; h++) {
+            var v = Math.random() * 2.2 + h + 50;
+            rain_data.push(
+                [now + h * 60 * 60 * 1000, v]
+            );
+            wl_data.push(
+                [now + h * 60 * 60 * 1000, v * (1 - Math.random() * 0.2) / 10]
+            );
+        }
+        Highcharts.chart('chart1', {
+            title: {
+                text: '雨量及監測水位變化',
+                align: 'left'
+            },
+            subtitle: {
+                text: '虛線為預報值',
+                align: 'right'
+            },
+            xAxis,
+            yAxis: {
+                title: {
+                    text: '雨量 (MM)'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                valueSuffix: ' MM'
+            },
+            series: [{
+                name: '雨量',
+                data: rain_data,
+                zoneAxis: 'x',
+                lineWidth: 4,
+                marker: {
+                    lineWidth: 2,
+                    lineColor: '#4840d6',
+                    fillColor: '#fff'
+                },
+                color: {
+                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                    stops: [
+                        [0, '#fa4fed'],
+                        [1, '#5897ff']
+                    ]
+                },
+                zones: [{
+                    value: now
+                }, {
+                    dashStyle: 'Dot'
+                }]
+            }]
+        });
+
+        Highcharts.chart('chart2', {
+            title: {
+                text: '',
+                align: 'left'
+            },
+
+            subtitle: {
+                text: '',
+                align: 'left'
+            },
+            xAxis,
+            yAxis: {
+                title: {
+                    text: '水位 (M)'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+
+            tooltip: {
+                valueSuffix: ' MM'
+            },
+
+            series: [{
+                name: '水位',
+                data: wl_data,
+                zoneAxis: 'x',
+                lineWidth: 4,
+                marker: {
+                    lineWidth: 2,
+                    lineColor: '#4840d6',
+                    fillColor: '#fff'
+                },
+                color: {
+                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                    stops: [
+                        [0, '#fa4fed'],
+                        [1, '#5897ff']
+                    ]
+                },
+                zones: [{
+                    value: now
+                }, {
+                    dashStyle: 'Dot'
+                }]
+            }]
+        });
+
+        $("#chart_popup").show();
+        return "";
+    }
+
     function add_station_layer() {
         if (!arcgis_map.ready) {
             setTimeout(add_station_layer, 1000);
@@ -96,7 +246,7 @@
                 popupTemplate: {
                     overwriteActions: true,
                     title: "雨水下水道監測站",
-                    content: "站名: {name}<br/>座標: {lon},{lat}<br/>地址: {addr}"
+                    content: show_timeseries
                 },
                 renderer,
                 opacity: 1,
@@ -176,11 +326,20 @@
         qpesum_forecast_60m();
     });
 </script>
+<div id="chart_popup" style="position:absolute; height: 340px; width: 600px; left: 480px; top: 150px; 
+    background: rgba(250,250,250,0.9); display: none;">
+    <div id="close" style="position:absolute; top: 2px; right: 5px; z-index: 1000;" onclick="hide_chart_popup()">&#x2612;</div>
+    <div id="chart1" style="height: 200px; width: 100%"></div>
+    <div id="chart2" style="height: 140px; width: 100%"></div>
+</div>
 <div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
-    <div id="arcgis_legend" style="width: 300px; height: 535px; margin-bottom: -20px; overflow-y: hidden; transform: scale(0.9); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">        
+    <div id="arcgis_legend" style="width: 340px; height: 510px; margin-bottom: -85px; overflow-y: hidden; transform: scale(0.8); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+    </div>
+    <div id="station_legend" style="width: 270px; height: 45px; margin-bottom: 20px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
+        <h5><input type="checkbox" checked onclick="toggle_stationlayer()" />雨水下水道監測站</h5>
     </div>
     <div style="width: 270px; height: 140px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
-        <h5><input type="checkbox" checked onclick="qpesums.toggle_qpesums()"/>雨量資料類型：</h5>
+        <h5><input type="checkbox" checked onclick="qpesums.toggle_qpesums()" />雨量資料類型：</h5>
         <select id="select_rain_data" style="color: rgb(14 8 100); font-weight: 800;" onchange="switch_rain_data()">
             <option value="0">QPESUMS一小時觀測雨量</option>
             <option selected value="1">QPESUMS第一小時累積雨量</option>
