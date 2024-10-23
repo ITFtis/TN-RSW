@@ -1,12 +1,16 @@
 {
   "data": [
     {
-      "rain_st": "SW000001",
+      "rain_st": "C0X160",
       "precipitation_12hr": 50
     },
     {
-      "rain_st": "SW000024",
-      "precipitation_12hr": 500
+      "rain_st": "W1770910",
+      "precipitation_12hr": 100
+    },
+    {
+      "rain_st": "W1770905",
+      "precipitation_12hr": 1000
     }
   ]
 

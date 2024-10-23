@@ -19,6 +19,9 @@ namespace CWB_NCKU_Data.Services
         private static Dictionary<string, string> COUNTY = 
             DataService.GetData<BasicSttCounty>(DataService.DB_TN, "SELECT * FROM BasicSttCounty")
             .ToDictionary(x => x.county_code, x => x.county_name);
+        private static Dictionary<string, string> RAIN_STATIONS =
+            DataService.GetData<CWARainStPredict>(DataService.DB_DOU, "SELECT DISTINCT rain_st_id,rain_st_name FROM CWA_RainStPredict")
+            .ToDictionary(x => x.rain_st_id, x => x.rain_st_name);
         private static LineMessageService line_service = new LineMessageService();
 
         public string Execute()
@@ -44,6 +47,34 @@ namespace CWB_NCKU_Data.Services
                 var list = DataService.GetData<CWARainStPredict>(DataService.DB_DOU,
                     "SELECT * FROM CWA_RainStPredict WHERE predict_datetime=@PredictDateTime", new SqlParameter[] {
                         new SqlParameter("@PredictDateTime", datetime_to_check)});
+                if (list.Count() == 0)
+                {
+                    datetime_to_check = datetime_to_check.AddHours(-1);
+                    list = DataService.GetData<CWARainStPredict>(DataService.DB_DOU,
+                                       "SELECT * FROM CWA_RainStPredict WHERE predict_datetime=@PredictDateTime", new SqlParameter[] {
+                    new SqlParameter("@PredictDateTime", datetime_to_check)});
+                }
+                if (AppSettings.NOTIFY_DATA == "2") // read using json
+                {
+                    var url = string.Format(AppSettings.NCKU_Download_Url2);
+                    byte[] data = DataService.DownloadData(url);
+                    logger.Info("使用模擬資料，完成自 " + url + " 下載資料，檔案大小：" + data.Length);
+                    var list0 = new List<CWARainStPredict>();
+                    var result = JObject.Parse(System.Text.Encoding.UTF8.GetString(data));
+                    var list1 = result["data"].ToList();
+                    foreach (var y in list1)
+                    {
+                        var id = y["rain_st"].Value<string>();
+                        RAIN_STATIONS.TryGetValue(id, out var lookup_name);
+                        list0.Add(new CWARainStPredict()
+                        {
+                            rain_st_id = y["rain_st"].Value<string>(),
+                            rain_st_name = lookup_name,
+                            acc12 = Convert.ToDecimal(y["precipitation_12hr"].Value<float>())
+                        });;
+                    }
+                    list = list0.AsQueryable();
+                }
                 foreach (var x in list)
                 {
                     var rain_st = x.rain_st_name;

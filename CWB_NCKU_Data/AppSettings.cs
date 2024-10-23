@@ -18,5 +18,6 @@ namespace CWB_NCKU_Data
         public static string TO_NCKU_Path = ConfigurationManager.AppSettings["TO_NCKU_Path"].ToString();
         public static string NCKU_OUTPUT_Path = ConfigurationManager.AppSettings["NCKU_OUTPUT_Path"].ToString();
         public static string API_BASEURL = ConfigurationManager.AppSettings["API_BASEURL"].ToString();
+        public static string NOTIFY_DATA = ConfigurationManager.AppSettings["NOTIFY_DATA"].ToString();
     }
 }
