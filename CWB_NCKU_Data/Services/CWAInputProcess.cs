@@ -132,7 +132,7 @@ namespace CWB_NCKU_Data.Services
                                         }
                                         using (var decompressed = entry.Open())
                                         {
-                                            using (var reader = new StreamReader(decompressed, Encoding.Default))
+                                            using (var reader = new StreamReader(decompressed, Encoding.UTF8))
                                             {
                                                 cached.Add(Convert.ToInt32(d.Key.Split('.')[1]), CreateCache(reader.ReadToEnd()));
                                             }
