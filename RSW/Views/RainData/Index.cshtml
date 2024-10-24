@@ -1,6 +1,8 @@
 ﻿@Html.Partial("MapPartial")
 <link rel="stylesheet" href="~/Content/prj/sub/floodquery.css" />
 <link rel="stylesheet" href="~/Content/prj/rthydro.css" />
+<script src='@Url.Content("~/Scripts/gis/helper.js")'></script>
+<script src='@Url.Content("~/Scripts/prj/data.js")'></script>
 
 @Html.Partial("_ArcgisMapPartial")
 @Html.Partial("_ArcgisQpesums")
@@ -9,6 +11,7 @@
     const MAP_SERVER = 'https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer';
     const LAYER_ID = "PIPE_LAYER";
     const LAYER_ID2 = "STATION_LAYER";
+    const LAYER_ID3 = "STATION_LAYER_LABEL";
     function switch_rain_data() {
       const h = $("#select_rain_data").val() * 1;
       switch (h) {
@@ -49,150 +52,177 @@
     }
 
     function show_timeseries(feature) {
+        const dev_id = feature.graphic.attributes.dev_id;
         const ts = new Date();
         const now = ts.getTime() - ts.getTimezoneOffset() * 60 * 1000;
-        const xAxis = {
-            type: 'datetime',
-            plotLines: [{
-                color: '#4840d6',
-                width: 2,
-                value: now,
-                zIndex: 2,
-                dashStyle: 'Dash',
-                label: {
-                    text: '目前時間',
-                    rotation: 0,
-                    y: 20,
-                    style: {
-                        color: '#333333'
+        const now_h = Math.floor(now / (60 * 60 * 1000)) * 60 * 60 * 1000;
+        $.post('@Url.Action("StationData")/' + dev_id).then(function (stationdata) {
+            datahelper.getSewerSerInfo({ dev_id }, function (sewerser) {
+                datahelper.getRainSerInfo({ InfoTime: new Date(now), StationID: stationdata.prediction.rain_st }, function (timeseries) {
+                    var rain_prediction =
+                        (stationdata.rain_prediction
+                            && stationdata.rain_prediction.map(x => [new Date(x.Item1).getTime(), x.Item2]).filter(x => x[0] > now))
+                        || [];
+                    const xAxis = {
+                        type: 'datetime',
+                        plotLines: [{
+                            color: '#4840d6',
+                            width: 2,
+                            value: now,
+                            zIndex: 2,
+                            dashStyle: 'Dash',
+                            label: {
+                                text: '目前時間',
+                                rotation: 0,
+                                y: 20,
+                                style: {
+                                    color: '#333333'
+                                }
+                            }
+                        }]
+                    };
+
+                    const mp = feature.graphic.geometry;
+                    arcgis_map.view.graphics.removeAll();
+                    arcgis_map.view.graphics.add({
+                        geometry: mp,
+                        symbol: {
+                            type: "simple-marker",
+                            outline: {
+                                color: [255, 128, 128, 0.5],
+                                width: "0.5px"
+                            },
+                            style: "triangle",
+                            size: 20
+                        }
+                    });
+                    const sp = arcgis_map.view.toScreen(mp);
+                    const rain_data = [
+                        ...timeseries
+                            .filter(x => x.InfoTime.endsWith("00:00"))
+                            .map(x => [new Date(x.InfoTime + "Z").getTime(), x.Acc1HourRainQty])
+                            .filter(x => x[0] > now - 12 * 60 * 60 * 1000),
+                        ...rain_prediction
+                    ];
+
+                    const wl_data = [
+                        ...sewerser
+                            .map(x => [new Date(x.datatime + "Z").getTime(), x.level])
+                            .filter(x => x[0] > now_h - 12 * 60 * 60 * 1000)
+                            .sort((a,b) => a[0] - b[0])
+                    ];
+                    for (let h = 1; h <= 12; h++) {
+                        if (stationdata.prediction && stationdata.prediction.r2) {
+                            var rain_12h = rain_data.filter(x => x[0] < now + h * 60 * 60 * 1000).slice(-12).map(x=>x[1]).reduce((a, b) => a + b, 0);
+                            var predict_v = stationdata.prediction.predict_mx * rain_12h + stationdata.prediction.predict_dy;
+                            wl_data.push(
+                                [now_h + h * 60 * 60 * 1000, predict_v.toFixed(2) * 1.0]
+                            );
+                        } else {
+                            wl_data.push(
+                                [now_h + h * 60 * 60 * 1000, null]
+                            );
+                        }
                     }
-                }
-            }]
-        };
+                    Highcharts.chart('chart1', {
+                        title: {
+                            text: '雨量及監測水位變化：' + feature.graphic.attributes.name,
+                            align: 'left'
+                        },
+                        subtitle: {
+                            text: (feature.graphic.attributes.addr || '') + ' 虛線為預報值',
+                            align: 'right'
+                        },
+                        xAxis,
+                        yAxis: {
+                            title: {
+                                text: '雨量 (MM)'
+                            }
+                        },
+                        legend: {
+                            enabled: false
+                        },
+                        tooltip: {
+                            valueSuffix: ' MM'
+                        },
+                        series: [{
+                            name: '雨量',
+                            data: rain_data,
+                            zoneAxis: 'x',
+                            lineWidth: 4,
+                            marker: {
+                                lineWidth: 2,
+                                lineColor: '#4840d6',
+                                fillColor: '#fff'
+                            },
+                            color: {
+                                linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                                stops: [
+                                    [0, '#fa4fed'],
+                                    [1, '#5897ff']
+                                ]
+                            },
+                            zones: [{
+                                value: now
+                            }, {
+                                dashStyle: 'Dot'
+                            }]
+                        }]
+                    });
 
-        const mp = feature.graphic.geometry;
-        arcgis_map.view.graphics.removeAll();
-        arcgis_map.view.graphics.add({
-            geometry: mp,
-            symbol: {
-                type: "simple-marker",
-                outline: {
-                    color: [255, 128, 128, 0.5],
-                    width: "0.5px"
-                },
-                style: "triangle",
-                size: 20
-            }
+                    Highcharts.chart('chart2', {
+                        title: {
+                            text: '',
+                            align: 'left'
+                        },
+
+                        subtitle: {
+                            text: '',
+                            align: 'left'
+                        },
+                        xAxis,
+                        yAxis: {
+                            title: {
+                                text: '水位 (M)'
+                            }
+                        },
+                        legend: {
+                            enabled: false
+                        },
+
+                        tooltip: {
+                            valueSuffix: ' MM'
+                        },
+
+                        series: [{
+                            name: '水位',
+                            data: wl_data,
+                            zoneAxis: 'x',
+                            lineWidth: 4,
+                            marker: {
+                                lineWidth: 2,
+                                lineColor: '#4840d6',
+                                fillColor: '#fff'
+                            },
+                            color: {
+                                linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                                stops: [
+                                    [0, '#fa4fed'],
+                                    [1, '#5897ff']
+                                ]
+                            },
+                            zones: [{
+                                value: now
+                            }, {
+                                dashStyle: 'Dot'
+                            }]
+                        }]
+                    });
+
+                    $("#chart_popup").css("top", sp.y + "px").css("left", sp.x + "px").show();
+                });
+            });
         });
-        const sp = arcgis_map.view.toScreen(mp);
-        const rain_data = [];
-        const wl_data = [];
-        for (let h = -12; h <= 12; h++) {
-            var v = Math.random() * 2.2 + h + 50;
-            rain_data.push(
-                [now + h * 60 * 60 * 1000, v]
-            );
-            wl_data.push(
-                [now + h * 60 * 60 * 1000, v * (1 - Math.random() * 0.2) / 10]
-            );
-        }
-        Highcharts.chart('chart1', {
-            title: {
-                text: '雨量及監測水位變化：' + feature.graphic.attributes.name,
-                align: 'left'
-            },
-            subtitle: {
-                text: (feature.graphic.attributes.addr || '') + ' 虛線為預報值',
-                align: 'right'
-            },
-            xAxis,
-            yAxis: {
-                title: {
-                    text: '雨量 (MM)'
-                }
-            },
-            legend: {
-                enabled: false
-            },
-            tooltip: {
-                valueSuffix: ' MM'
-            },
-            series: [{
-                name: '雨量',
-                data: rain_data,
-                zoneAxis: 'x',
-                lineWidth: 4,
-                marker: {
-                    lineWidth: 2,
-                    lineColor: '#4840d6',
-                    fillColor: '#fff'
-                },
-                color: {
-                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
-                    stops: [
-                        [0, '#fa4fed'],
-                        [1, '#5897ff']
-                    ]
-                },
-                zones: [{
-                    value: now
-                }, {
-                    dashStyle: 'Dot'
-                }]
-            }]
-        });
-
-        Highcharts.chart('chart2', {
-            title: {
-                text: '',
-                align: 'left'
-            },
-
-            subtitle: {
-                text: '',
-                align: 'left'
-            },
-            xAxis,
-            yAxis: {
-                title: {
-                    text: '水位 (M)'
-                }
-            },
-            legend: {
-                enabled: false
-            },
-
-            tooltip: {
-                valueSuffix: ' MM'
-            },
-
-            series: [{
-                name: '水位',
-                data: wl_data,
-                zoneAxis: 'x',
-                lineWidth: 4,
-                marker: {
-                    lineWidth: 2,
-                    lineColor: '#4840d6',
-                    fillColor: '#fff'
-                },
-                color: {
-                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
-                    stops: [
-                        [0, '#fa4fed'],
-                        [1, '#5897ff']
-                    ]
-                },
-                zones: [{
-                    value: now
-                }, {
-                    dashStyle: 'Dot'
-                }]
-            }]
-        });
-
-        $("#chart_popup").css("top", sp.y + "px").css("left", sp.x + "px").show();
-        console.log(feature, feature.graphic, feature.graphic.attributes)
         return feature.graphic.attributes.name + " " + feature.graphic.attributes.addr;
     }
 
@@ -201,19 +231,57 @@
             setTimeout(add_station_layer, 1000);
             return;
         }
-        $.post('@Url.Action("Stations")').then(response => {
+        const check_alarm = (s, d) => {
+            if (!s || !d || d.level === null) return "無監測值";
+            if (s.alarm1 && d.level >= s.alarm1) return "一級警戒";
+            if (s.alarm2 && d.level >= s.alarm2) return "二級警戒";
+            if (s.alarm3 && d.level >= s.alarm3) return "三級警戒";
+            return "正常";
+        }
+        const process = (response, rt) => {
             const old_layer = arcgis_map.map.findLayerById(LAYER_ID2);
             if (old_layer) {
                 arcgis_map.map.remove(old_layer);
             }
+            const symbol = {
+                type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+                url: '@Url.Content("~/images/pin/下水道_正常.png")',
+                width: "32px",
+                height: "32px"
+            };
             const renderer = {
-                type: "simple",
-                symbol: {
-                    type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
-                    url: '@Url.Content("~/images/pin/下水道_正常.png")',
-                    width: "32px",
-                    height: "32px"
-                }
+                type: "unique-value",  // autocasts as new UniqueValueRenderer()
+                field: "alarm",
+                defaultSymbol: symbol,
+                uniqueValueInfos: [
+                    {
+                        value: "無監測值",
+                        symbol: {
+                            ...symbol,
+                            url: '@Url.Content("~/images/pin/下水道_無資料.png")'
+                        }
+                    },
+                    {
+                        value: "一級警戒",
+                        symbol: {
+                            ...symbol,
+                            url: '@Url.Content("~/images/pin/下水道_一級.png")'
+                        }
+                    },
+                    {
+                        value: "二級警戒",
+                        symbol: {
+                            ...symbol,
+                            url: '@Url.Content("~/images/pin/下水道_二級.png")'
+                        }
+                    },
+                    {
+                        value: "三級警戒",
+                        symbol: {
+                            ...symbol,
+                            url: '@Url.Content("~/images/pin/下水道_三級.png")'
+                        }
+                    }]
             };
             const list = [];
             let ptr = 0;
@@ -229,8 +297,10 @@
                     },
                     attributes: {
                         OBJECTID: ptr,
+                        dev_id: row.dev_id,
                         name: row.stt_name,
                         addr: row.addr,
+                        alarm: check_alarm(row, rt.find(x=>x.dev_id == row.dev_id)),
                         lon,
                         lat
                     }
@@ -244,7 +314,13 @@
                     name: "OBJECTID",
                     type: "oid"
                 }, {
+                    name: "alarm",
+                    type: "string"
+                }, {
                     name: "name",
+                    type: "string"
+                }, {
+                    name: "dev_id",
                     type: "string"
                 }, {
                     name: "addr",
@@ -260,14 +336,100 @@
                 popupTemplate: {
                     overwriteActions: true,
                     outFields: ["*"],
-                    title: "雨水下水道監測站",
+                    title: "雨水下水道監測站-{name}: {alarm}",
                     content: show_timeseries
                 },
                 renderer,
                 opacity: 1,
             });
             arcgis_map.map.add(layer);
-        });
+        };
+        datahelper.getSewerBase(
+            st => {
+                $.post('@Url.Action("Stations")').then((ps) => {
+                    const old_label = arcgis_map.map.findLayerById(LAYER_ID3);
+                    if (old_label) {
+                        arcgis_map.map.remove(old_label);
+                    }
+                    const list = [];
+                    let ptr = 0;
+
+                    for (var s of ps.filter(x => x.predict_mx)) {
+                        var row = st.find(x => x.dev_id == s.dev_id);
+                        if (row) {
+                            const lon = row.lon * 1.0;
+                            const lat = row.lat * 1.0;
+                            ptr++;
+                            list.push({
+                                geometry: {
+                                    type: "point",
+                                    x: lon,
+                                    y: lat,
+                                },
+                                attributes: {
+                                    OBJECTID: ptr,
+                                    dev_id: row.dev_id,
+                                    name: row.stt_name,
+                                    addr: row.addr,
+                                    lon,
+                                    lat
+                                }
+                            });
+                        }
+                    }
+                    const layer = arcgis_map.createFeatureLayer({
+                        id: LAYER_ID3,
+                        source: list,  // array of graphics objects
+                        objectIdField: "OBJECTID",
+                        fields: [{
+                            name: "OBJECTID",
+                            type: "oid"
+                        }, {
+                            name: "name",
+                            type: "string"
+                        }, {
+                            name: "dev_id",
+                            type: "string"
+                        }, {
+                            name: "addr",
+                            type: "string"
+                        }, {
+                            name: "lat",
+                            type: "double"
+                        },
+                        {
+                            name: "lon",
+                            type: "double"
+                        }],
+                        labelingInfo: [
+                            {
+                                // autocasts as new LabelClass()
+                                symbol: {
+                                    type: "text", // autocasts as new TextSymbol()
+                                    color: "#800000",
+                                    backgroundColor: [213, 184, 255, 0.75],
+                                    borderLineColor: "orange",
+                                    borderLineSize: 1,
+                                    yoffset: 5,
+                                    font: {
+                                        // autocast as new Font()
+                                        family: "Arial",
+                                        size: 8,
+                                    }
+                                },
+                                labelPlacement: "above-center",
+                                labelExpressionInfo: {
+                                    expression: "$feature.name"
+                                }
+                            }
+                        ],
+                        opacity: 1,
+                    });
+                    arcgis_map.map.add(layer);
+                });
+                datahelper.getSewerRt(new Date(), rt => process(st, rt));
+            }
+        );
     }
     function add_pipe_layer() {
         if (!arcgis_map.ready)
@@ -341,7 +503,7 @@
         qpesum_forecast_60m();
     });
 </script>
-<div id="chart_popup" style="position:absolute; height: 340px; width: 600px; left: 480px; top: 150px; 
+<div id="chart_popup" style="position:absolute; height: 340px; width: 600px; left: 480px; top: 150px;
     outline: 2px double orange; z-index: 900;
     background: rgba(250,250,250,0.9); display: none;">
     <div id="close" style="cursor: pointer; position:absolute; top: 2px; right: 5px; z-index: 1000;" onclick="hide_chart_popup()">&#x2612;</div>

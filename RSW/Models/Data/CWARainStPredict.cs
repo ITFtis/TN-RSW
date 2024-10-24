@@ -14,7 +14,7 @@ namespace RSW.Models.Data
     {
         public long id { get; set; }
 
-        public DateTime PredictDateTime { get; set; }
+        public DateTime predict_datetime { get; set; }
 
         public string rain_st_id { get; set; }
         public string rain_st_name { get; set; }
