@@ -6,6 +6,7 @@
 <div id="water-level-legend" style="position: absolute; bottom: 65px; right: 140px;padding: 0px; border: 3px solid rgba(255,255,255,0.4); background: rgba(250,250,250,0.9) ">
 </div>
 <script>
+    
     const LAYER_ID = 'E-WARN';
     const MODEL_COLORSCALE = [
         { value: 0, color: "rgba(0,0,0,0)" },
@@ -16,22 +17,115 @@
         { value: 3, color: "rgba(50,50,144, 1)" }
     ];
     var last_t0;
+    let chart;
+    const manhole111 = {};
+    const series_data = {};
+    jQuery.getJSON('@Url.Content("~/Data/NCKU_OUTPUT/8040202.geojson")', data => Object.assign(manhole111, data));
 
     function hide_chart_popup() {
+        profile_play_stop();
         $("#chart_popup").hide();
     }
 
+    function profile_play_stop() {
+        $("#stop").hide();
+        $("#play").show();
+    }
+
+    function profile_play(btn_click) {
+        if (btn_click) {
+            $("#play").hide();
+            $("#stop").show();
+        } else {
+            if ($("#play").is(":visible")) return;
+        }
+        const data = $("#chart1").data("tsv");
+        const idx = $("#chart1").data("idx");
+        if (idx + 1 == data.length) {
+            $("#chart1").data("idx", 0);
+            profile_play_stop();
+        } else {
+            $("#chart1").data("idx", idx + 1);
+            set_profile_data();
+            setTimeout(profile_play, 300);
+        }
+    }
+
+    function set_profile_data() {
+        const data = $("#chart1").data("tsv");
+        const idx = $("#chart1").data("idx");
+        chart.setSubtitle({
+            text: `日期: ${data[idx]['Date']}  時間: ${data[idx]['Time']}`
+        });
+        const vals = chart.xAxis[0].categories.map((x, i) => {
+            const node_id = x.split(';')[1];
+            const bt = chart.series[0].data[i].y;
+            try {
+                const wl = data[idx][node_id] * 1.0;
+//                console.log(bt, wl);
+                if (wl > 0) {
+                    return [wl, bt < 0 ? 0 : bt];
+                } else {
+                    return [0, wl];
+                }
+            } catch {
+                return [0, 0];
+            }
+        });
+        chart.series[2].setData(vals.map(x => x[0]), false);
+        chart.series[3].setData(vals.map(x => x[1]), false);
+        chart.redraw(true);
+    }
+
     function show_profile(feature) {
-        $("#chart_popup").show();
+        const datafile = feature.graphic.attributes.key;
+        const xAxis = series_data[datafile].xAxis;
+        const series = series_data[datafile].series;
+        d3.tsv('@Url.Content("~/Data/NCKU_OUTPUT/")' + datafile).then(data => {
+            $("#chart1").data("tsv", data);
+            $("#chart1").data("idx", 0);
+            chart = Highcharts.chart("chart1", {
+                chart: {
+                    type: "column"
+                },
+                title: { text: "下水道水位變化剖面 - " + feature.graphic.attributes.pipe },
+                subtitle: {
+                    text: `日期: ${data[0]['Date']}  時間: ${data[0]['Time']}` },
+                legend: { enabled: false },
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.2,
+                        borderWidth: 0,
+                        grouping: false
+                    },
+                    series: {
+                        states: {
+                            hover: {
+                                enabled: false
+                            }
+                        }
+                    }
+                },
+                xAxis,
+                yAxis: {
+                    title: {
+                        text: '高程 (M)'
+                    }
+                },
+                colors: ["#4080ff", "#c0c0c0", "#4080ff", "#c0c0c0", "#ffffff"],
+                series
+            });
+            setTimeout(set_profile_data,200);
+            $("#chart_popup").show();
+        });
         return feature.graphic.attributes.title;
     }
 
     function getProfileData() {
-        if (!arcgis_map.createFeatureLayer) {
+        if (!arcgis_map.createFeatureLayer || !manhole111.features) {
             console.log('Waiting for arcgis ready');
             setTimeout(function () { getProfileData(); }, 1000);
         } else {
-
             var f = arcgis_map.createFeatureLayer({
                 url: "https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/1"
             });
@@ -39,35 +133,62 @@
                 const old_result_layer = arcgis_map.map.findLayerById(LAYER_ID + '-PROFILE');
                 if (old_result_layer) arcgis_map.map.remove(old_result_layer);
                 const list = [];
-                const xAxis = {
-                    categories: []
-                };
-                const series = [
-                    { name: "Bottom", data: [] },
-                    { name: "Top", data: [] },
-                    { name: "WL", data: [] },
-                ];
                 const promises = [];
                 let ptr = 0;
-                for (var p of Object.values(json)) {
-                    ptr++;
+                for (let p of Object.values(json)) {
+                    const xAxis = {
+                        categories: [],
+                        labels: {
+                            formatter: function () {
+                                return this.value.split(';')[0];
+                            }
+                        }
+                    };
+                    const series = [
+                        { name: "Bottom", data: [] },
+                        { name: "Top", data: [] },
+                        { name: "BLUE", data: [] },
+                        { name: "GRAY", data: [] },
+                        { name: "WHITE", data: [] },
+                    ];
+                    function push_node(n, b, h) {
+                        xAxis.categories.push(`${n.fid};${n.model_id}`);
+                        series[0].data.push(b - h);
+                        series[1].data.push(b);
+                        if (b - h < 0) {
+                            series[4].data.push(0);
+                        } else {
+                            series[4].data.push(b - h);
+                        }
+                        series[2].data.push(0);
+                        series[3].data.push(b - h);
+                    }
                     const fid_list = p.node.map(x => x.fid);
                     const q = f.createQuery();
                     q.where = "fid in (" + fid_list.join(',') + ")";
                     q.returnGeometry = false;
-                    q.outFields = ["fid", "lon", "lat", "BaseHeight", "HoleDepth"];
+                    q.outFields = ["fid", "lon", "lat", "BaseHeight", "HoleDepth","FacNum"];
                     promises.push(
                         f.queryFeatures(q).then(result => {
+                            ptr++;
                             let paths = [
                                 fid_list.map(i => {
+                                    const n = p.node.find(x => x.fid == i);
                                     const y = result.features.find(x => x.attributes.FID == i);
-                                    if (y.attributes.BaseHeight && y.attributes.HoleDepth) {
-                                        const b = y.attributes.BaseHeight - y.attributes.HoleDepth;
-                                        const wl = Math.random() * 0.8;
-                                        xAxis.categories.push(i);
-                                        series[0].data.push(b);
-                                        series[2].data.push(wl);
-                                        series[1].data.push(y.attributes.BaseHeight);
+                                    if (y.attributes.HoleDepth) {
+                                        const b = y.attributes.BaseHeight;
+                                        const h = y.attributes.HoleDepth;
+                                        push_node(n, b, h);
+                                    } else {
+                                        const fnum = n.FacNum;
+                                        if (fnum) {
+                                            const mh = manhole111.features.find(x => x.properties["識別碼"] == fnum);
+                                            if (mh) {
+                                                const b = mh.properties["地盤高"];
+                                                const h = mh.properties["孔深"];
+                                                push_node(n, b, h);
+                                            }
+                                        }
                                     }
                                     return [y.attributes.lon, y.attributes.lat];
                                 })
@@ -80,9 +201,11 @@
                                 attributes: {
                                     OBJECTID: ptr,
                                     pipe: p.title,
+                                    key: p.datafile,
                                     fid: result.features.map(r => r.attributes.FID).join(",")
                                 }
                             });
+                            series_data[p.datafile] = { xAxis, series };
                         })
                     );
                 }
@@ -97,14 +220,19 @@
                         }, {
                             name: "fid",
                             type: "string"
-                            }],
+                        }, {
+                            name: "pipe",
+                            type: "string"
+                        }, {
+                            name: "key",
+                            type: "string"
+                        }],
                         popupTemplate: {
                             overwriteActions: true,
                             outFields: ["*"],
                             title: "雨水下水道",
                             content: show_profile
                         },
-
                         renderer: {
                             type: "simple",
                             symbol: {
@@ -116,29 +244,6 @@
                         }
                     });
                     arcgis_map.map.add(layer);
-                    Highcharts.chart("chart1", {
-                        chart: {
-                            type: "column"
-                        },
-                        title: { text: "下水道水位變化剖面 - " + p.title },
-                        subtitle: { text: "時間: 21:40" },                      
-                        legend: { enabled: false },
-                        plotOptions: {
-                            column: {
-                                pointPadding: 0.2,
-                                borderWidth: 0,
-                                grouping: false
-                            }
-                        },
-                        xAxis,
-                        yAxis: {
-                            title: {
-                                text: '高程 (M)'
-                            }
-                        },
-                        colors: ["#4080ff", "#c0c0c0", "#4080ff"],
-                        series
-                    })
                 });
             });
         }
@@ -253,9 +358,9 @@
     }
 
     $(document).ready(function () {
+        getProfileData();
         showModelResultLegend();
         getModelResultList();
-        getProfileData();
     });
 </script>
 <div id="chart_popup" style="position:absolute; height: 450px; width: 60vw; left: 20vw; top: 150px;
@@ -263,6 +368,8 @@
     background: rgba(250,250,250,0.9); display: none;">
     <div id="close" style="cursor: pointer; position: absolute; top: 2px; right: 5px; z-index: 1000;" onclick="hide_chart_popup()">&#x2612;</div>
     <div id="chart1" style="height: 450px; width: 100%"></div>
+    <div id="play" style="cursor: pointer; position: absolute; top: 2px; right: 35px; z-index: 1000;" onclick="profile_play('btn')">&#x25b6;</div>
+    <div id="stop" style="cursor: pointer; position: absolute; top: 2px; right: 35px; z-index: 1000; display:none" onclick="profile_play_stop()">&#x23f9;</div>
 </div>
 <div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
     <div style="margin-bottom: 20px; margin-right: 20px; width: 200px; height: 100%; max-height: 420px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 12px; cursor: pointer">
