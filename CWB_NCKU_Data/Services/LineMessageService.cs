@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -11,6 +12,7 @@ namespace RSW.Services
 {
     public class LineMessageService
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private class LineMessageSettings
         {
             public string CHANNEL_ID { get; set; }
@@ -23,9 +25,19 @@ namespace RSW.Services
 
         private static LineMessageSettings GetLineMessageSettings()
         {
-            LineMessageSettings s = JsonConvert.DeserializeObject<LineMessageSettings>(
-                File.ReadAllText("./LineApi.json")
-                );
+            string CHANNEL_ID = ConfigurationManager.AppSettings["CHANNEL_ID"].ToString();
+            string CHANNEL_SECRET = ConfigurationManager.AppSettings["CHANNEL_SECRET"].ToString();
+            string CHANNEL_TOKEN = ConfigurationManager.AppSettings["CHANNEL_TOKEN"].ToString();
+            string TO_GROUP_ID = ConfigurationManager.AppSettings["TO_GROUP_ID"].ToString();
+
+            LineMessageSettings s = new LineMessageSettings
+            {
+                CHANNEL_ID = CHANNEL_ID,
+                CHANNEL_SECRET = CHANNEL_SECRET,
+                CHANNEL_TOKEN = CHANNEL_TOKEN,
+                TO_GROUP_ID = TO_GROUP_ID
+            };
+            logger.Info("已載入 Line API 設定");
             return s;
         }
         public string Push(string text)
@@ -68,18 +80,22 @@ namespace RSW.Services
                         }
                     }
                 }
+                logger.Info("Line訊息發送成功");
 
                 return "OK-" + line_request_id;
             }
             catch (WebException e)
             {
+                logger.Error("Line訊息發送失敗");
                 string responseText;
 
                 using (var reader = new StreamReader(e.Response.GetResponseStream()))
                 {
                     responseText = reader.ReadToEnd();
                 }
-                return "ERROR(" + e.Status + ")-" + responseText;
+                string msg = "ERROR(" + e.Status + ")-" + responseText;
+                logger.Error("錯誤內容為：" + msg);
+                return msg;
             }
         }
     }
