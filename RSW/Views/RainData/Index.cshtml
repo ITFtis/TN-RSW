@@ -38,6 +38,7 @@
 
     function hide_chart_popup() {
         $("#chart_popup").hide();
+        $("#chart1").empty();
     }
 
     function toggle_stationlayer(show) {
@@ -52,6 +53,7 @@
     }
 
     function show_timeseries(feature) {
+        $("#chart1").empty();
         const dev_id = feature.graphic.attributes.dev_id;
         const ts = new Date();
         const now = ts.getTime() - ts.getTimezoneOffset() * 60 * 1000;
@@ -219,7 +221,18 @@
                         }]
                     });
 
+
                     $("#chart_popup").css("top", sp.y + "px").css("left", sp.x + "px").show();
+                    var rect = $("#chart_popup")[0].getBoundingClientRect();
+
+                    // 如果超出螢幕, 移到正中央
+                    if (
+                        (rect.x) < 0
+                        || (rect.y) < 0
+                        || (rect.x + rect.width > window.innerWidth || rect.y + rect.height > window.innerHeight)
+                    ) {
+                        $("#chart_popup").css("top", "calc(50vh - 170px)").css("left", "calc(50vw - 300px)")
+                    }
                 });
             });
         });
@@ -342,7 +355,7 @@
                 renderer,
                 opacity: 1,
             });
-            arcgis_map.map.add(layer);
+            arcgis_map.map.add(layer, 5);
         };
         datahelper.getSewerBase(
             st => {
@@ -410,10 +423,10 @@
                                     backgroundColor: [213, 184, 255, 0.75],
                                     borderLineColor: "orange",
                                     borderLineSize: 1,
-                                    yoffset: 5,
+                                    yoffset: -35,
                                     font: {
                                         // autocast as new Font()
-                                        family: "Arial",
+                                        family: "Noto Sans",
                                         size: 8,
                                     }
                                 },
@@ -425,7 +438,7 @@
                         ],
                         opacity: 1,
                     });
-                    arcgis_map.map.add(layer);
+                    arcgis_map.map.add(layer, 1);
                 });
                 datahelper.getSewerRt(new Date(), rt => process(st, rt));
             }
@@ -501,6 +514,8 @@
         add_pipe_layer();
         add_station_layer();
         qpesum_forecast_60m();
+        $("input").css("pointer-events", "auto");
+        $("select").css("pointer-events", "auto");
     });
 </script>
 <div id="chart_popup" style="position:absolute; height: 340px; width: 600px; left: 480px; top: 150px;
@@ -510,7 +525,7 @@
     <div id="chart1" style="height: 200px; width: 100%"></div>
     <div id="chart2" style="height: 140px; width: 100%"></div>
 </div>
-<div style="position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap;">
+<div style="pointer-events: none; position: absolute; top: 70px; left: 30px; height: calc(100vh - 260px); display: flex; flex-direction: column; flex-wrap: wrap; ">
     <div id="arcgis_legend" style="width: 340px; height: 510px; margin-bottom: -85px; margin-right: -20px; overflow: hidden; transform: scale(0.8); transform-origin: top left; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
         <div style="margin-top: 200px;text-align: center; width: 100%">載入中...</div>
     </div>
