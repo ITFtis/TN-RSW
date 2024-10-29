@@ -44,15 +44,17 @@ namespace CWB_NCKU_Data.Services
                 //    ]
                 // }
                 //
+                // 必須要 ToList, 不然 foreach 時會有 另一個 SqlParameterCollection 已經包含 SqlParameter。 的錯誤
                 var list = DataService.GetData<CWARainStPredict>(DataService.DB_DOU,
                     "SELECT * FROM CWA_RainStPredict WHERE predict_datetime=@PredictDateTime", new SqlParameter[] {
-                        new SqlParameter("@PredictDateTime", datetime_to_check)});
+                        new SqlParameter("@PredictDateTime", datetime_to_check)}).ToList();
                 if (list.Count() == 0)
                 {
                     datetime_to_check = datetime_to_check.AddHours(-1);
+                    // 必須要 ToList, 不然 foreach 時會有 另一個 SqlParameterCollection 已經包含 SqlParameter。 的錯誤
                     list = DataService.GetData<CWARainStPredict>(DataService.DB_DOU,
                                        "SELECT * FROM CWA_RainStPredict WHERE predict_datetime=@PredictDateTime", new SqlParameter[] {
-                    new SqlParameter("@PredictDateTime", datetime_to_check)});
+                    new SqlParameter("@PredictDateTime", datetime_to_check)}).ToList();
                 }
                 if (AppSettings.NOTIFY_DATA == "2") // read using json
                 {
@@ -73,7 +75,7 @@ namespace CWB_NCKU_Data.Services
                             acc12 = Convert.ToDecimal(y["precipitation_12hr"].Value<float>())
                         });;
                     }
-                    list = list0.AsQueryable();
+                    list = list0.ToList();
                 }
                 foreach (var x in list)
                 {
