@@ -159,6 +159,30 @@
             }
         });
 
+        arcgis_map.uploadFeatures = async function (layer, list, batchTime = 4) {
+            console.log(`to upload ${list.length} features`);
+            let index = 0;
+            let done = () => index >= list.length;
+
+            while (!done()) {
+                const start = performance.now();
+                const features = [];
+
+                // consume for batchTime milliseconds.
+                while (performance.now() - start < batchTime && !done()) {
+                    features.push(list[index]);
+                    index++;
+                }
+
+                if (features.length) {
+                    console.log(`uploading ${features.length} features`);
+                    await layer.applyEdits({
+                        addFeatures: features
+                    });
+                }
+            }
+        }
+
         arcgis_map.map = map;
         arcgis_map.view = view;
         arcgis_map.createFeatureLayer = (p) => new FeatureLayer(p);
