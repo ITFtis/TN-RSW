@@ -83,7 +83,8 @@ namespace CWB_NCKU_Data.Services
                     var input_x = x.acc12;
                     logger.Info("雨量站 " + rain_st + " 12小時預估累積雨量為: " + input_x);
 
-                    if (input_x < 0.001m) continue;
+                    // 雨量小於 5mm 的直接忽略
+                    if (input_x < (decimal) 5) continue;
 
                     // 找出該雨量站對應的水位計公式
                     // 用 ToList() 全部載入記憶體
@@ -128,9 +129,9 @@ namespace CWB_NCKU_Data.Services
                                 }
                                 if (alarm_type != null)
                                 {
-                                    logger.Info($"{rain_st} 12小時累積預報雨量為 {input_x}，水位計 {w_dev.stt_name} ({w_dev.dev_id}/{w_dev.stt_no}) 觸發 {alarm_type}, 推估水位： {wl}, 警戒值 {alarm_level}");
+                                    logger.Info($"雨量站 {rain_st} 12小時累積預報雨量為 {input_x} ，水位計 {w_dev.stt_name} ({w_dev.dev_id}/{w_dev.stt_no}) 觸發 {alarm_type}, 推估水位： {wl}, 警戒值 {alarm_level}");
 
-                                    string message = $"[{DateTime.Now.ToShortTimeString()}] {rain_st} 12小時累積預報雨量為 {input_x}，{COUNTY[w_dev.county_code]} ({w_dev.stt_name}) 已達 {alarm_type} 標準，預估水位為 {wl.ToString("0.##")} mm，請注意防範";
+                                    string message = $"[{DateTime.Now.ToShortTimeString()}] 雨量站 {rain_st} 12小時累積預報雨量為 {input_x} mm，{COUNTY[w_dev.county_code]} ({w_dev.stt_name}) 已達 {alarm_type} 標準，預估水位為 {wl.ToString("0.##")} M，請注意防範";
                                     string push_result = line_service.Push(message);
                                     WaterLevelPredictionAlarm alarm = new WaterLevelPredictionAlarm
                                     {

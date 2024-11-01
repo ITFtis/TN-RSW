@@ -18,20 +18,20 @@
         { min: 0.0001, max: 1, color: "#63529B" },
         { min: -999, max: 0.0001, color: "#ffffff" }];
     qpesums.qplus_colorscale = [{ "value": 0, "color": "#635273" },
-        { "value": 10, "color": "#736384" },
-        { "value": 20, "color": "#9c9c9c" },
-        { "value": 50, "color": "#00ce00" },
-        { "value": 100, "color": "#00ad00" },
-        { "value": 150, "color": "#009400" },
-        { "value": 200, "color": "#ffff00" },
-        { "value": 300, "color": "#e7c600" },
-        { "value": 400, "color": "#ff9400" },
-        { "value": 500, "color": "#ff6363" },
-        { "value": 800, "color": "#ff0000" },
-        { "value": 1000, "color": "#ce0000" },
-        { "value": 1500, "color": "#ff00ff" },
-        { "value": 2000, "color": "#9c31ce" },
-        { "value": 2500, "color": "#ffffff" }];
+        { "value": 1, "color": "#736384" },
+        { "value": 2, "color": "#9c9c9c" },
+        { "value": 5, "color": "#00ce00" },
+        { "value": 10, "color": "#00ad00" },
+        { "value": 15, "color": "#009400" },
+        { "value": 20, "color": "#ffff00" },
+        { "value": 30, "color": "#e7c600" },
+        { "value": 40, "color": "#ff9400" },
+        { "value": 50, "color": "#ff6363" },
+        { "value": 80, "color": "#ff0000" },
+        { "value": 100, "color": "#ce0000" },
+        { "value": 150, "color": "#ff00ff" },
+        { "value": 200, "color": "#9c31ce" },
+        { "value": 250, "color": "#ffffff" }];
     qpesums.renderer = {
         "type": "simple", "symbol": { "type": "simple-fill", "color": [250, 250, 250], "outline": { "color": [255, 128, 128, 0.1], "width": 0.5 } },
         "visualVariables": [{
@@ -73,19 +73,16 @@
             old_layer.visible = !old_layer.visible;
         }
     }
+
     qpesums.update_qpesums_layer = function (list, popupMsg) {
-        $("#qpesum-color-legend").html("<h6>雨量</h6>");
-        for (var s of qpesums.renderer.visualVariables[0].stops) {
-            const c = s.color;
-            const v = s.value;
-            $("#qpesum-color-legend").append(`<div style='width: 50px; height: 25px; border: 0.5px solid rgba(128,128,128,0.5);'><span style='display: inline-block; height: 100%; width: 100%; background-color: ${c}; opacity: 0.5;'></span><span style='font-weight: 800; display: inline-block; margin-left: 2px; position: absolute; '>${v}</span></div>`);
-        }
-        $("#qpesum-color-legend").append("<h6>單位：mm</h6>")
+        $("#qpesum-color-legend").html("<h6 style='color:#802000; font-weight:700'>雨量<br/>資料更新中</h6>");
+
         const old_layer = arcgis_map.map.findLayerById(qpesums.LAYER_ID);
         const layer = arcgis_map.createFeatureLayer({
             id: qpesums.LAYER_ID,
-            source: list,  // array of graphics objects
             objectIdField: "OBJECTID",
+            geometryType: "polygon",
+            source: [],
             fields: [{
                 name: "OBJECTID",
                 type: "oid"
@@ -110,6 +107,16 @@
         });
         if (old_layer) arcgis_map.map.remove(old_layer);
         arcgis_map.map.add(layer, 0);
+        arcgis_map.uploadFeatures(layer, list).then(() => {
+            $("#qpesum-color-legend").html("<h6>雨量</h6>");
+            var stops = qpesums.renderer.visualVariables[0].stops;
+            stops.sort((a, b) => (b.value - a.value));
+            for (var s of stops) {
+                const c = s.color;
+                const v = s.value;
+                $("#qpesum-color-legend").append(`<div style='width: 50px; height: 25px; border: 0.5px solid rgba(128,128,128,0.5);'><span style='display: inline-block; height: 100%; width: 100%; background-color: ${c}; opacity: 0.5;'></span><span style='font-weight: 800; display: inline-block; margin-left: 2px; position: absolute; '>${v}</span></div>`);
+            }
+            $("#qpesum-color-legend").append("<h6>單位：mm</h6>")        });
     }
     
     function manysplendid_csv_data(t0,h) {

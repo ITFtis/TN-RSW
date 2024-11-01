@@ -193,7 +193,7 @@
                         },
 
                         tooltip: {
-                            valueSuffix: ' MM'
+                            valueSuffix: ' M'
                         },
 
                         series: [{
@@ -491,7 +491,7 @@
                 legend_html = legend_html.replace(to_remove[0].outerHTML, "");
             }
             $("#arcgis_legend").html(
-                `<h5 style="transform:scale(1.25); transform-origin: top left;"><input type="checkbox" checked onclick="toggle_pipe()" />顯示下水道管線</h5>` +
+                `<h5 style="transform:scale(1.25); transform-origin: top left;"><input type="checkbox" style="pointer-events: auto" checked onclick="toggle_pipe()" />顯示下水道管線</h5>` +
                 legend_html
             );
         });
