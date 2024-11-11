@@ -1,4 +1,5 @@
-﻿using RSW.Models.Manager;
+﻿using RSW.Models.Data;
+using RSW.Models.Manager;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -21,6 +22,9 @@ namespace RSW.Models
         {
             Database.SetInitializer<DouModelContextExt>(null);
         }
+
+        public virtual DbSet<Disaster> Disaster { get; set; }
+
         //public new virtual DbSet<Role> Role { get; set; }
 
         //static object lockGetAllRoles = new object();

@@ -187,10 +187,12 @@
     <Compile Include="Controllers\Manager\RoleController.cs" />
     <Compile Include="Controllers\Manager\UserController.cs" />
     <Compile Include="Controllers\Path\AlertController.cs" />
+    <Compile Include="Controllers\Path\CodePathController.cs" />
     <Compile Include="Controllers\Path\RtController.cs" />
     <Compile Include="Controllers\Path\SysManagerController.cs" />
     <Compile Include="Controllers\Prj\CDashboardController.cs" />
     <Compile Include="Controllers\Prj\DDashboardController.cs" />
+    <Compile Include="Controllers\Prj\DisasterController.cs" />
     <Compile Include="Controllers\Prj\EWarnController.cs" />
     <Compile Include="Controllers\Prj\OnSiteInspectionController.cs" />
     <Compile Include="Controllers\Prj\RainDataController.cs" />
@@ -212,6 +214,7 @@
     <Compile Include="Models\Data\CWA_AirPressure.cs" />
     <Compile Include="Models\Data\BasicSttCounty.cs" />
     <Compile Include="Models\Data\BasicSttDev.cs" />
+    <Compile Include="Models\Data\Disaster.cs" />
     <Compile Include="Models\Data\InspectionData.cs" />
     <Compile Include="Models\Data\RealTimeReliable.cs" />
     <Compile Include="Models\Data\RealTimeStt.cs" />
@@ -409,12 +412,14 @@
     <Content Include="Views\StationFl\Index.cshtml" />
     <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
     <Content Include="Views\Shared\_ArcgisQpesums.cshtml" />
+    <Content Include="Views\Disaster\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\Alert\" />
     <Folder Include="Views\Cctv\" />
     <Folder Include="Views\CDashboard\" />
+    <Folder Include="Views\CodePath\" />
     <Folder Include="Views\DDashboard\" />
     <Folder Include="Views\NoModel\" />
     <Folder Include="Views\RSW2Statsion\" />
