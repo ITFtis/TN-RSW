@@ -60,27 +60,71 @@
         const vals = chart.xAxis[0].categories.map((x, i) => {
             const node_id = x.split(';')[1];
             const bt = chart.series[0].data[i].y;
+            const bt2 = chart.series[6].data[i].y;
             try {
-                const wl = data[idx][node_id] * 1.0;
-//                console.log(bt, wl);
+                const wl = (data[idx][node_id] * 1.0) || 0;
+                const wl0 = Number.isFinite(bt2) ? Math.min(wl, bt2) : wl;
+                const ar = bt < wl0 ? [bt, wl0] : [wl0, wl0];
                 if (wl > 0) {
-                    return [wl, bt < 0 ? 0 : bt];
+                    return [wl, bt < 0 ? 0 : bt, ar];
+                } else if (bt > wl) {
+                    return [0, bt, ar];
                 } else {
-                    return [0, wl];
+                    return [0, wl, ar];
                 }
             } catch {
-                return [0, 0];
+                return [0, 0, [bt, bt2]];
             }
         });
+//        console.log(vals);
         chart.series[2].setData(vals.map(x => x[0]), false);
         chart.series[3].setData(vals.map(x => x[1]), false);
+        chart.series[5].setData(vals.map(x => x[2]), false);
         chart.redraw(true);
     }
 
     function show_profile(feature) {
         const datafile = feature.graphic.attributes.key;
+        const mh_pipe = series_data[datafile].mh_pipe;
         const xAxis = series_data[datafile].xAxis;
         const series = series_data[datafile].series;
+        if (series[6].data.length == 0) {
+            let xidx = 0;
+
+            for (let c of xAxis.categories) {
+                var m = c.split(';')[2]
+                if (m && mh_pipe[m]) {
+                    const p = mh_pipe[m];
+                    const di = p.PipeHeight || p.PipeWidth || 0;
+                    if (di) {
+                        let d = 0;
+                        if (p.BLE && p.BLE * 1.0) {
+                            d = p.BLE * 1.0;
+                        } else {
+                            d = p.DEPTH || 0;
+                        }
+                        series[6].data.push(d + di);
+                        series[7].data.push(d);
+                        //                    console.log(m, d, series[0].data[xidx])
+                        if (series[0].data[xidx] > d) {
+                            series[0].data[xidx] = d;
+                            if (d < 0) {
+                                series[3].data[xidx] = d;
+                                series[4].data[xidx] = 0;
+                            } else {
+                                series[3].data[xidx] = 0;
+                                series[4].data[xidx] = d;
+                            }
+                        }
+                        xidx++;
+                        continue;
+                    }
+                }
+                series[6].data.push(null);
+                series[7].data.push(null);
+                xidx++;
+            }
+        }
         d3.tsv('@Url.Content("~/Data/NCKU_OUTPUT/")' + datafile).then(data => {
             $("#chart1").data("tsv", data);
             $("#chart1").data("idx", 0);
@@ -88,19 +132,30 @@
                 chart: {
                     type: "column"
                 },
+                tooltip: {
+                    enabled: false
+                },
                 title: { text: "下水道水位變化剖面 - " + feature.graphic.attributes.pipe },
                 subtitle: {
-                    text: `日期: ${data[0]['Date']}  時間: ${data[0]['Time']}` },
+                    text: `日期: ${data[0]['Date']}  時間: ${data[0]['Time']}`
+                },
                 legend: { enabled: false },
                 plotOptions: {
                     column: {
                         pointPadding: 0.2,
                         borderWidth: 0,
-                        grouping: false
+                        grouping: false,
                     },
                     series: {
+                        allowPointSelect: false,
                         states: {
                             hover: {
+                                enabled: false
+                            },
+                            inactive: {
+                                enabled: false
+                            },
+                            select: {
                                 enabled: false
                             }
                         }
@@ -112,7 +167,7 @@
                         text: '高程 (M)'
                     }
                 },
-                colors: ["#4080ff", "#c0c0c0", "#4080ff", "#c0c0c0", "#ffffff"],
+                colors: ["#4080ff", "#c0c0c0", "#4080ff", "#c0c0c0", "#ffffff", "#4080ff", "#c0c0c0", "#c0c0c0"],
                 series
             });
             setTimeout(set_profile_data,200);
@@ -122,11 +177,34 @@
     }
 
     function getProfileData() {
+
+        const label = {
+            enabled: true,
+            style: {
+                color: '#00008F',
+                textOutline: 'none'
+            },
+            formatter: function () {
+                    if (this.y && this.series.chart.series[0].data[this.point.index]
+                    && this.series.chart.series[2].data[this.point.index]
+                    && this.series.chart.series[3].data[this.point.index]
+                    && this.series.chart.series[5].data[this.point.index]) {
+                        const b = this.series.chart.series[0].data[this.point.index].y;
+                        const wl1 = this.series.chart.series[2].data[this.point.index].y || this.series.chart.series[3].data[this.point.index].y;
+                        const ph = this.series.chart.series[5].data[this.point.index].high;
+                        if (this.y > wl1) return;
+                        return (b > ph) ? ph : wl1;
+                }
+            }
+        };
         if (!arcgis_map.createFeatureLayer || !manhole111.features) {
             console.log('Waiting for arcgis ready');
             setTimeout(function () { getProfileData(); }, 1000);
         } else {
-            var f = arcgis_map.createFeatureLayer({
+            var f0 = arcgis_map.createFeatureLayer({
+                url: "https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/0"
+            });
+            var f1 = arcgis_map.createFeatureLayer({
                 url: "https://water.tainan.gov.tw/tnwrbarcgis104/rest/services/TNRW/IISI_rainwater/MapServer/1"
             });
             $.get('@Url.Content("~/Data/NCKU_OUTPUT/profile.json")').then(json => {
@@ -147,34 +225,46 @@
                     const series = [
                         { name: "Bottom", data: [] },
                         { name: "Top", data: [] },
-                        { name: "BLUE", data: [] },
-                        { name: "GRAY", data: [] },
+                        { name: "BLUE", data: [], dataLabels: label },
+                        { name: "GRAY", data: [], dataLabels: label },
                         { name: "WHITE", data: [] },
+                        {
+                            name: "BLUE_AREA", data: [], type: 'arearange', marker: { enabled: false }
+                        },
+                        {
+                            name: "PIPE_TOP", data: [], type: 'line', marker: { enabled: false }, connectNulls: true
+                        },
+                        {
+                            name: "PIPE_BOTTOM", data: [], type: 'line', marker: { enabled: false }, connectNulls: true,
+                        },
                     ];
                     function push_node(n, b, h) {
-                        xAxis.categories.push(`${n.fid};${n.model_id}`);
+                        xAxis.categories.push(`${n.fid};${n.model_id};${n.MH_NUM}`);
                         series[0].data.push(b - h);
                         series[1].data.push(b);
                         if (b - h < 0) {
+                            series[3].data.push(b - h);
                             series[4].data.push(0);
                         } else {
+                            series[3].data.push(0);
                             series[4].data.push(b - h);
                         }
                         series[2].data.push(0);
-                        series[3].data.push(b - h);
+                        series[5].data.push([b-h, 0]);
                     }
                     const fid_list = p.node.map(x => x.fid);
-                    const q = f.createQuery();
-                    q.where = "fid in (" + fid_list.join(',') + ")";
-                    q.returnGeometry = false;
-                    q.outFields = ["fid", "lon", "lat", "BaseHeight", "HoleDepth","FacNum"];
+                    const q1 = f1.createQuery();
+                    q1.where = "fid in (" + fid_list.join(',') + ")";
+                    q1.returnGeometry = false;
+                    q1.outFields = ["fid", "lon", "lat", "BaseHeight", "HoleDepth", "FacNum", "MH_NUM"];
                     promises.push(
-                        f.queryFeatures(q).then(result => {
+                        f1.queryFeatures(q1).then(result => {
                             ptr++;
                             let paths = [
                                 fid_list.map(i => {
                                     const n = p.node.find(x => x.fid == i);
                                     const y = result.features.find(x => x.attributes.FID == i);
+                                    n.MH_NUM = y.attributes.MH_NUM;
                                     if (y.attributes.HoleDepth) {
                                         const b = y.attributes.BaseHeight;
                                         const h = y.attributes.HoleDepth;
@@ -190,9 +280,31 @@
                                             }
                                         }
                                     }
+//                                    console.log([i,y.attributes.lon, y.attributes.lat])
                                     return [y.attributes.lon, y.attributes.lat];
                                 })
                             ];
+                            const q0 = f0.createQuery();
+                            q0.where = "US_MH in ('" + p.node.map(x => x.MH_NUM).join("','") + "')"
+                                + " OR DS_MH in ('" + p.node.map(x => x.MH_NUM).join("', '") + "')";
+//                            console.log(q0.where);
+                            q0.returnGeometry = false;
+                            q0.outFields = ["PI_NUM", "US_MH", "DS_MH", "PipeHeight", "PipeWidth", "FacNum", "US_BLE", "DS_BLE", "StartDepth", "EndDepth"];
+                            f0.queryFeatures(q0).then(presult => {
+                                const mh_pipe = {};
+                                for (let p of presult.features) {
+                                    mh_pipe[p.attributes.US_MH] = {
+                                        ...p.attributes, BLE: p.attributes.US_BLE, DEPTH: p.attributes.StartDepth
+                                    };
+                                    if (!mh_pipe[p.attributes.DS_MH]) {
+                                        mh_pipe[p.attributes.DS_MH] = {
+                                            ...p.attributes, BLE: p.attributes.DS_BLE, DEPTH: p.attributes.EndDepth
+                                        };
+                                    }
+                                }
+                                series_data[p.datafile] = { ...series_data[p.datafile] || {}, mh_pipe };
+                            });
+
                             list.push({
                                 geometry: {
                                     type: "polyline",
@@ -202,10 +314,11 @@
                                     OBJECTID: ptr,
                                     pipe: p.title,
                                     key: p.datafile,
-                                    fid: result.features.map(r => r.attributes.FID).join(",")
+                                    fid: fid_list.join(","),
+                                    mh: p.node.map(x => x.MH_NUM).join(",")
                                 }
                             });
-                            series_data[p.datafile] = { xAxis, series };
+                            series_data[p.datafile] = { ...series_data[p.datafile] || {}, xAxis, series };
                         })
                     );
                 }
@@ -219,6 +332,9 @@
                             type: "oid"
                         }, {
                             name: "fid",
+                            type: "string"
+                        }, {
+                            name: "mh",
                             type: "string"
                         }, {
                             name: "pipe",
