@@ -106,6 +106,20 @@ namespace RSW
                "~/Scripts/gis/charthelper.js",
                "~/Scripts/prj/sewerdashboard.js"
                    ));
+
+            bundles.Add(new ScriptBundle("~/Scripts/prj/sewerhistory").Include(
+               "~/Scripts/prj/data.js",
+               "~/Scripts/prj/meterImpl.js",
+               "~/Scripts/prj/createMapHelper.js",
+               "~/Scripts/prj/sub/rthydro/rain.js",
+               "~/Scripts/prj/sub/rthydro/water.js",
+               "~/Scripts/prj/sub/rthydro/fsensor.js",
+               "~/Scripts/prj/sub/rthydro/sewer.js",
+               "~/Scripts/prj/sub/unitCode.js",
+               "~/Scripts/prj/sub/floodQuery.js",
+               "~/Scripts/gis/charthelper.js",
+               "~/Scripts/prj/sewerhistory.js"
+                   ));
         }
     }
 }
