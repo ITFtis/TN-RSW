@@ -1,0 +1,47 @@
+﻿<link rel="stylesheet" href="~/Content/prj/rthydro.css" />
+<link rel="stylesheet" href="~/Content/prj/sewerdashboard.css" />
+<script src="https://code.highcharts.com/highcharts.js"></script>
+@Scripts.Render("~/Scripts/prj/sewerhistory")
+<div class="container-fluid cdashboard-container">
+    <div class="row main-title">
+        <div style="text-align: right;padding-top: 12px;">
+            <label><span>災害事件：</span></label>
+            <select id="select-disaster">
+                @foreach (var d in ViewBag.Disaster)
+                {
+                <option value="@($"{d.Id}-{d.SDate.ToString("yyyyMMdd")}-{d.EDate.ToString("yyyyMMdd")}")" data-desc='@d.Note'>@d.Name (@d.SDate.ToString("yyyy/MM/dd") 至 @d.EDate.ToString("yyyy/MM/dd"))</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row main-content">
+        <div class="col-md-4 col-sm-6 display-cell">
+            <div class="cell-title">下水道感應器</div>
+            <div class="cell-content sewer-content"></div>
+        </div>
+        <div class="col-md-4 col-sm-6 display-cell">
+            <div class="cell-title">鄰近水位感應器</div>
+            <div class="cell-content water-content"></div>
+        </div>
+        <div class="col-md-4 col-sm-6 display-cell disaster-panel">
+            <div class="cell-title">災害事件說明</div>
+            <div class="disaster-content cell-content" style="max-height: 120px; padding: 8px;"></div>
+            <div class="disaster-summary cell-content" style="max-height: 80px; padding: 8px;"></div>
+            <div class="meter">
+                <span style="display:inline-block; padding-top: 8px; font-weight: 800">下水道感應器清單</span>
+            </div>
+        </div>
+        @*<div class="col-md-4 col-sm-6 display-cell">
+            <div class="cell-title">鄰近路淹感測器</div>
+            <div class="cell-content fsensor-content"></div>
+        </div> 鄰近路淹感測器 無歷史資料 *@
+        <div class="col-md-4 col-sm-6 display-cell">
+            <div class="cell-title">鄰近參考雨量站</div>
+            <div class="cell-content rain-content"></div>
+        </div>
+        <div class="col-md-4 col-sm-6 display-cell">
+            <div class="cell-title">鄰近地理空間資訊</div>
+            <div id="map" class="cell-content"></div>
+        </div>
+    </div>
+</div>

@@ -200,6 +200,7 @@
     <Compile Include="Controllers\Prj\ReliableDayController.cs" />
     <Compile Include="Controllers\Prj\ReliableMonthController.cs" />
     <Compile Include="Controllers\Prj\RtHydroController.cs" />
+    <Compile Include="Controllers\Prj\SHistoryController.cs" />
     <Compile Include="Controllers\Prj\SDashboardController.cs" />
     <Compile Include="Controllers\Prj\StationFlController.cs" />
     <Compile Include="Controllers\Prj\StationController.cs" />
@@ -341,6 +342,7 @@
     <Content Include="Scripts\prj\cadastre_position.js" />
     <Content Include="Scripts\prj\ReliableDD.js" />
     <Content Include="Scripts\prj\ReliableMM.js" />
+    <Content Include="Scripts\prj\sewerhistory.js" />
     <Content Include="Scripts\prj\TS.js" />
     <Content Include="Scripts\prj\village_position.js" />
     <Content Include="Scripts\prj\rthydro.js" />
@@ -413,6 +415,7 @@
     <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
     <Content Include="Views\Shared\_ArcgisQpesums.cshtml" />
     <Content Include="Views\Disaster\Index.cshtml" />
+    <Content Include="Views\SHistory\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
