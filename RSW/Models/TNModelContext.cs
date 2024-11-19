@@ -52,6 +52,7 @@ namespace RSW.Models
         public virtual DbSet<RealTimeReliable> RealTimeReliable { get; set; }
         public virtual DbSet<v_RealTimeReliable_Month> v_RealTimeReliable_Month { get; set; }
         public virtual DbSet<v_RealTimeReliable_Day> v_RealTimeReliable_Day { get; set; }
+		public virtual DbSet<v_ErrorReport_Monthly> v_ErrorReport_Monthly { get; set; }
         public virtual DbSet<BasicSttCounty> BasicSttCounty { get; set; }
         public virtual DbSet<RemoteCtrlAttribute> RemoteCtrlAttribute { get; set; }
         public virtual DbSet<RealTimeStt5> RealTimeStt5 { get; set; }

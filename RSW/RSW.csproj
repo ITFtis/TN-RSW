@@ -193,6 +193,7 @@
     <Compile Include="Controllers\Prj\CDashboardController.cs" />
     <Compile Include="Controllers\Prj\DDashboardController.cs" />
     <Compile Include="Controllers\Prj\DisasterController.cs" />
+    <Compile Include="Controllers\Prj\ErrorMonthlyReportController.cs" />
     <Compile Include="Controllers\Prj\EWarnController.cs" />
     <Compile Include="Controllers\Prj\OnSiteInspectionController.cs" />
     <Compile Include="Controllers\Prj\RainDataController.cs" />
@@ -222,6 +223,7 @@
     <Compile Include="Models\Data\RemoteCtrlAttribute.cs" />
     <Compile Include="Models\Data\SelectItems.cs" />
     <Compile Include="Models\Data\TroubleShootingData.cs" />
+    <Compile Include="Models\Data\v_ErrorReport_Monthly.cs" />
     <Compile Include="Models\Data\v_RealTimeReliable_Day.cs" />
     <Compile Include="Models\Data\v_RealTimeReliable_Month.cs" />
     <Compile Include="Models\Data\WaterLevelPrediction.cs" />
@@ -334,6 +336,7 @@
     <Content Include="Scripts\prj\createMapHelper.js" />
     <Content Include="Scripts\prj\data.js" />
     <Content Include="Scripts\prj\ddashboard.js" />
+    <Content Include="Scripts\prj\ErrorReport_MM.js" />
     <Content Include="Scripts\prj\historyFlood.js" />
     <Content Include="Scripts\prj\Inspection.js" />
     <Content Include="Scripts\prj\meterImpl.js" />
@@ -415,7 +418,11 @@
     <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
     <Content Include="Views\Shared\_ArcgisQpesums.cshtml" />
     <Content Include="Views\Disaster\Index.cshtml" />
+<<<<<<< Updated upstream
     <Content Include="Views\SHistory\Index.cshtml" />
+=======
+    <Content Include="Views\ErrorMonthlyReport\Index.cshtml" />
+>>>>>>> Stashed changes
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
