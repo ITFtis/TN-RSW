@@ -418,11 +418,8 @@
     <Content Include="Views\Shared\_ArcgisMapPartial.cshtml" />
     <Content Include="Views\Shared\_ArcgisQpesums.cshtml" />
     <Content Include="Views\Disaster\Index.cshtml" />
-<<<<<<< Updated upstream
     <Content Include="Views\SHistory\Index.cshtml" />
-=======
     <Content Include="Views\ErrorMonthlyReport\Index.cshtml" />
->>>>>>> Stashed changes
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
