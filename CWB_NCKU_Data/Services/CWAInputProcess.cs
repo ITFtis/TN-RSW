@@ -283,7 +283,7 @@ namespace CWB_NCKU_Data.Services
                                 }
                                 catch (Exception e)
                                 {
-                                    logger.Warn("雨量站 " + station_name + " 無法解析12小時累積雨量");
+                                    logger.Warn("雨量站 " + station_name + " 無法解析12小時累積雨量, 錯誤: " + e.ToString(), e);
                                 }
                             }
                         }
