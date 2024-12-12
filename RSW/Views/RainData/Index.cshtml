@@ -13,6 +13,10 @@
     const LAYER_ID2 = "STATION_LAYER";
     const LAYER_ID3 = "STATION_LAYER_LABEL";
     function switch_rain_data() {
+        if (!arcgis_map.ready) {
+            setTimeout(switch_rain_data, 1000);
+            return;
+        }
       const h = $("#select_rain_data").val() * 1;
       switch (h) {
         case 0:
@@ -513,7 +517,7 @@
     $(document).ready(function () {
         add_pipe_layer();
         add_station_layer();
-        qpesum_forecast_60m();
+        switch_rain_data();
         $("input").css("pointer-events", "auto");
         $("select").css("pointer-events", "auto");
     });
@@ -535,7 +539,7 @@
     <div style="width: 270px; height: 140px; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 15px;">
         <h5><input type="checkbox" checked onclick="qpesums.toggle_qpesums()" />雨量資料類型：</h5>
         <select id="select_rain_data" style="color: rgb(14 8 100); font-weight: 800;" onchange="switch_rain_data()">
-            <option value="0">QPESUMS一小時觀測雨量</option>
+            @*<option value="0">QPESUMS一小時觀測雨量</option>*@
             <option selected value="1">QPESUMS第一小時累積雨量</option>
             <option value="2">QPESUMS第二小時累積雨量</option>
             <option value="3">QPESUMS第三小時累積雨量</option>
